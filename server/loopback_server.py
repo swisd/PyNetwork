@@ -34,7 +34,7 @@ ip_addr: str = "127.0.0.1"
 serverPort: int = 8000
 chc: list = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"]
 response: int = 200
-R_LIMIT = 10000
+R_LIMIT: int = 10000
 
 seperateIntefaceIP: list = []
 
@@ -259,13 +259,12 @@ class LoopbackServer(BaseHTTPRequestHandler):
                 fprint_s('HDR', response, response)
                 fprint(f"Successfully loaded file {self.path}", 'INFO', Fore.GREEN)
 
-            except Exception as e:
+            except Exception(FileExistsError) as e:
                 file_to_open = 'File not found'
                 response = 404
-                exception_curr = e
                 self.send_response(response)
                 fprint_s('HDR', response, response)
-                fprint(f"Requested file '{self.path}' not found", 'ERROR', Fore.RED)
+                fprint(f"Requested file '{self.path}' not found. {e}", 'ERROR', Fore.RED)
                 fprint(f"Either Server Error or C:/Network{self.path}' unavailable", 'SERVER', Fore.RED)
 
             fprint(f"SERVER: {str(ip_addr + ':' + str(serverPort))}", 'SERVER', Fore.CYAN)
@@ -294,7 +293,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
                          "            fprint(f'WRITE/STR C:/Network/{self.path} TO CLI @ {self.client_address}', 'SERVER', Fore.CYAN) \n"
                          "        ")
 
-        if '/db/' in self.path and not (self.path == '/server/database.html' or self.path == '/db' or self.path == '/server/scan/db_scanned.html'):
+        if '/db/' in self.path and not self.path in ('/server/database.html', '/db', '/server/scan/db_scanned.html'):
             self.wfile.write(bytes('<head><style>body{margin:4px;font-family:"OCR A";}</style></head><body><pre><plaintext>%s' % str(file_to_open), 'utf-8'))
             fprint(f'WRITE/STR C:/Network/{self.path} TO CLI @ {self.client_address}', 'SERVER', Fore.CYAN)
 
@@ -482,34 +481,34 @@ if __name__ == "__main__":
         # Update Progress Bar
         bar(i + 1, l, prefix='Loading:           ', suffix='Complete', length=25, data=True)
 
-    ih = 0
+    IH: int = 0
     stats = ["i7_1185G7/C0_C1_C2_C3", "i7-1185G7/C4_C5_C6_C7", "NVMe0                ", "RAM0                ", "CS0                ", "Done                "]
     statsI3 = ["i3_7350K/C0", "i3_7350K/C1", "NVMe0            ", "RAM0            ", "CS0            ", "Done            "]
 
     bar(0, l, prefix='Hardware Processes:', suffix=stats[0], length=25)
     for i, item in enumerate(items):
         # Do stuff...
-        suffix = stats[round(ih / 10)]
+        suffix: str = stats[round(IH / 10)]
         sleep(0.1)
         # Update Progress Bar
         bar(i + 1, l, prefix='Hardware Processes:', suffix=suffix, length=25)
-        ih += 1
+        IH += 1
 
     stats = ["Allocating Space            ", "Compiling A            ", "Compiling B            ", "Server Startup Items            ",
              "Initializing            ", "Started            "]
     bar(0, l, prefix='Starting:          ', suffix=stats[0], length=25)
 
-    ih = 0
+    IH: int = 0
 
     for i, item in enumerate(items):
         # Do stuff...
-        suffix = stats[round(ih / 10)]
+        suffix: str = stats[round(IH / 10)]
         sleep(0.1)
         # Update Progress Bar
-        bar(i + 1, l, prefix=f'Starting:          ', suffix=suffix, length=25)
-        ih += 1
+        bar(i + 1, l, prefix='Starting:          ', suffix=suffix, length=25)
+        IH += 1
 
-    webServer = HTTPServer((hostName, serverPort), LoopbackServer)
+    webServer: HTTPServer = HTTPServer((hostName, serverPort), LoopbackServer)
     fprint(f"Server started http://{hostName}:{serverPort} @ {ip_addr}", 'SERVER', Fore.CYAN)
     fprint(f"Server started http://{RLHostName}:{serverPort} @ {RLHostIPBaseAddr}", 'SERVER', Fore.CYAN)
     fprint(f'Listening on port {serverPort} ...', 'INFO', Fore.GREEN)

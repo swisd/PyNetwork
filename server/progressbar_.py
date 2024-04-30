@@ -2,7 +2,7 @@ from time import sleep
 from colorama import Fore
 from random import randint
 
-def bar(iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '␥', printEnd = "", data=False):
+def bar(iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '/', printEnd = "", data=False):
     """
     Call in a loop to create terminal progress bar
     @params:

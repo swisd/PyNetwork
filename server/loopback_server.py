@@ -496,7 +496,7 @@ if __name__ == "__main__":
         bar(i + 1, l, prefix = 'Hardware Processes:', suffix = suffix, length = 25)
         ih += 1
  
-    stats = ["Allocating Space            ", "Compiling A            ", "Compiling B            ", "Process Startup Items            ", "Initializing            ","Started            "]
+    stats = ["Allocating Space            ", "Compiling A            ", "Compiling B            ", "Server Startup Items            ", "Initializing            ","Started            "]
     bar(0, l, prefix='Starting:          ', suffix=stats[0], length=25)
 
     

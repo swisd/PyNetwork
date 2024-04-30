@@ -17,7 +17,7 @@ from progressbar_ import bar
 from tqdm import tqdm
 
 # Variables
-
+exception_curr: str = ''
 req_s: int = 0
 reql: list = []
 clients: list = []
@@ -136,11 +136,11 @@ def connect(ip: str = "127.0.0.1", port: int = 8000) -> object:
 # @cache
 @timedata
 class LoopbackServer(BaseHTTPRequestHandler):
-    global file_to_open, verifiedADDR, req_s, CLI_REQs
+    global file_to_open, verifiedADDR, req_s, CLI_REQs, exception_curr
 
     def do_GET(self):
 
-        global req_s, response, verifiedADDR, CLI_REQs
+        global req_s, response, verifiedADDR, CLI_REQs, exception_curr
         req_s += 1
 
         # GET cmd
@@ -262,7 +262,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
             except Exception as e:
                 file_to_open = 'File not found'
                 response = 404
-                self.execpt = e
+                exception_curr = e
                 self.send_response(response)
                 fprint_s('HDR', response, response)
                 fprint(f"Requested file '{self.path}' not found", 'ERROR', Fore.RED)
@@ -278,20 +278,21 @@ class LoopbackServer(BaseHTTPRequestHandler):
             fprint_s('HDR', response, response)
             self.end_headers()
             self.wfile.write(
-                bytes(f'<html><body><h4>{self.path}<h4><p>Exception occurred during processing of request from {self.client_address}</p><p>{self.execpt}</p></body></html>',
-                      "utf-8"))
-            fprint(f'Exception occurred during processing of request from {self.client_address}', 'ERROR', Back.RED)
-            fprint('', '', Back.RESET)
+                bytes(
+                    f'<html><body><h4>{self.path}<h4><p>Exception occurred during processing of request from {self.client_address}</p><p>{exception_curr}</p></body></html>',
+                    "utf-8"))
+            fprint(f'Exception occurred during processing of request from {self.client_address}', 'ERROR', Fore.RED)
 
         if self.path.endswith("/db"):
             self.wfile.write(bytes(file_to_open, 'utf-8'))
             fprint(f'WRITE/STR C:/Network/{self.path} TO CLI @ {self.client_address}', 'SERVER', Fore.CYAN)
-        unusedA = ("\n"
-                   "        elif self.path.endswith(\"/dbverify\"):\n"
-                   "self.wfile.write(bytes('<head><style>body{margin:4px;font-family:\"OCR A\";}</style></head><body><h1>IP Verification</h1><h3>IP Verification "
-                   "for database access from %s</h3></form><input type=\"submit\" value=\"VERIFY\"></body>' % str(self.client_address), 'utf-8'))\n"
-                   "            fprint(f'WRITE/STR C:/Network/{self.path} TO CLI @ {self.client_address}', 'SERVER', Fore.CYAN) \n"
-                   "        ")
+        unused_a: str = ("\n"
+                         "        elif self.path.endswith(\"/dbverify\"):\n"
+                         "self.wfile.write(bytes('<head><style>body{margin:4px;font-family:\"OCR A\";}</style></head><body><h1>IP Verification</h1><h3>IP "
+                         "Verification"
+                         "for database access from %s</h3></form><input type=\"submit\" value=\"VERIFY\"></body>' % str(self.client_address), 'utf-8'))\n"
+                         "            fprint(f'WRITE/STR C:/Network/{self.path} TO CLI @ {self.client_address}', 'SERVER', Fore.CYAN) \n"
+                         "        ")
 
         if '/db/' in self.path and not (self.path == '/server/database.html' or self.path == '/db' or self.path == '/server/scan/db_scanned.html'):
             self.wfile.write(bytes('<head><style>body{margin:4px;font-family:"OCR A";}</style></head><body><pre><plaintext>%s' % str(file_to_open), 'utf-8'))
@@ -522,29 +523,29 @@ if __name__ == "__main__":
     sleep(0)
     print("Server stopped.")
 
-unusedB = ("\n"
-           "        self.send_response(200, \"OK\")\n"
-           "        self.send_header(\"Content-type\", \"text/html\")\n"
-           "        cookie = http.cookies.SimpleCookie()\n"
-           "        cookie['ID'] = str(\n"
-           "            random.choice(chc) + \n"
-           "            random.choice(chc) + \n"
-           "            random.choice(chc) + \n"
-           "            random.choice(chc) + \n"
-           "            random.choice(chc)\n"
-           "            )\n"
-           "\n"
-           "        for morsel in cookie.values():\n"
-           "            self.send_header(\"Set-Cookie\", morsel.OutputString())\n"
-           "        self.end_headers()\n"
-           "        self.wfile.write(bytes(\"<head><title>LoopbackServerA1</title></head>\", \"utf-8\"))\n"
-           "        self.wfile.write(bytes(\"<p>Request: %s</p>\" % self.path, \"utf-8\"))\n"
-           "        self.wfile.write(bytes((\"<p>CLIENT: %s<p>\" % str(self.client_address)), \"utf-8\"))\n"
-           "        self.wfile.write(bytes((\"<p>SERVER: %s<p>\" % str(ip_addr + \":\" + str(serverPort))), \"utf-8\"))\n"
-           "        self.wfile.write(bytes((\"<p>CONNECTION: %s<p>\" % str(self.connection)), \"utf-8\"))\n"
-           "        self.wfile.write(bytes((\"<p>COMMAND: %s<p>\" % str(self.command)), \"utf-8\"))\n"
-           "        self.wfile.write(bytes((\"<p>HEADERS: %s<p>\" % str(self.headers)), \"utf-8\"))\n"
-           "        print(\"CLIENT: \", self.client_address)\n"
-           "        print(\"CONNECTION: \", self.connection)\n"
-           "        print(\"COMMAND: \", self.command)\n"
-           "        print(\"HEADERS: \n\", self.headers)\n")
+unused_b: str = ("\n"
+                 "        self.send_response(200, \"OK\")\n"
+                 "        self.send_header(\"Content-type\", \"text/html\")\n"
+                 "        cookie = http.cookies.SimpleCookie()\n"
+                 "        cookie['ID'] = str(\n"
+                 "            random.choice(chc) + \n"
+                 "            random.choice(chc) + \n"
+                 "            random.choice(chc) + \n"
+                 "            random.choice(chc) + \n"
+                 "            random.choice(chc)\n"
+                 "            )\n"
+                 "\n"
+                 "        for morsel in cookie.values():\n"
+                 "            self.send_header(\"Set-Cookie\", morsel.OutputString())\n"
+                 "        self.end_headers()\n"
+                 "        self.wfile.write(bytes(\"<head><title>LoopbackServerA1</title></head>\", \"utf-8\"))\n"
+                 "        self.wfile.write(bytes(\"<p>Request: %s</p>\" % self.path, \"utf-8\"))\n"
+                 "        self.wfile.write(bytes((\"<p>CLIENT: %s<p>\" % str(self.client_address)), \"utf-8\"))\n"
+                 "        self.wfile.write(bytes((\"<p>SERVER: %s<p>\" % str(ip_addr + \":\" + str(serverPort))), \"utf-8\"))\n"
+                 "        self.wfile.write(bytes((\"<p>CONNECTION: %s<p>\" % str(self.connection)), \"utf-8\"))\n"
+                 "        self.wfile.write(bytes((\"<p>COMMAND: %s<p>\" % str(self.command)), \"utf-8\"))\n"
+                 "        self.wfile.write(bytes((\"<p>HEADERS: %s<p>\" % str(self.headers)), \"utf-8\"))\n"
+                 "        print(\"CLIENT: \", self.client_address)\n"
+                 "        print(\"CONNECTION: \", self.connection)\n"
+                 "        print(\"COMMAND: \", self.command)\n"
+                 "        print(\"HEADERS: \n\", self.headers)\n")

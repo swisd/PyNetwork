@@ -1,8 +1,7 @@
 from plyer import notification
 from plyer import battery
 
-
-Transaction Monitor
+# Transaction Monitor
 # Code for retrieving pending transaction data from account
 
 # Code for displaying pending transactions and notifying user
@@ -44,7 +43,3 @@ if viewTransactions == 'yes':
 
 if viewTransactions == 'no':
     print()
-
-
-
-

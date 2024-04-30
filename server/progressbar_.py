@@ -2,7 +2,8 @@ from time import sleep
 from colorama import Fore
 from random import randint
 
-def bar(iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '/', printEnd = "", data=False):
+
+def bar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='/', printEnd="", data=False):
     """
     Call in a loop to create terminal progress bar
     @params:
@@ -16,20 +17,21 @@ def bar(iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, 
         printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
     """
     percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
-    filledLength = int(length * iteration // total)
-    bar = Fore.GREEN + (fill * filledLength) + (Fore.WHITE + ' ' * (length - filledLength))
+    filled_length: int = int(length * iteration // total)
+    bar_str: str = Fore.GREEN + (fill * filled_length) + (Fore.WHITE + ' ' * (length - filled_length))
     if not data:
-        print(f'\r{prefix} |{bar}| {percent}% {suffix}', end = printEnd)
+        print(f'\r{prefix} |{bar_str}| {percent}% {suffix}', end=printEnd)
     else:
-        print(f'\r{prefix} |{bar}| {percent}% {round(iteration/0.80, 1):<4}/{round(total/0.80, 1):<4}KB', end = printEnd)
+        print(f'\r{prefix} |{bar_str}| {percent}% {round(iteration / 0.80, 1):<4}/{round(total / 0.80, 1):<4}KB', end=printEnd)
     # Print New Line on Complete
-    if iteration == total: 
+    if iteration == total:
         print()
 
+
 def selfbar(wait):
-    var = ''
-    char = "#"
+    var: str = ''
+    char: str = "#"
     for i in range(20):
         var += char
-        print(f"\r|{var:-<20}|{round(len(var)/20, 2)*100}% {round(len(var)/0.80, 2)} KB           ", end="")
+        print(f"\r|{var:-<20}|{round(len(var) / 20, 2) * 100}% {round(len(var) / 0.80, 2)} KB           ", end="")
         sleep(wait)

@@ -5,14 +5,10 @@ import psutil
 from socket import gethostname, gethostbyname
 import http.cookies
 import random
-import os
 import cgi
 from colorama import Fore, Back
-import loopback_ssi
 from functools import cache
 from deprecated import deprecated
-
-
 
 # Variables
 
@@ -63,6 +59,7 @@ MOD_KEYWORDS: list = [
 
 KEYWORDS: list = []
 
+
 # Decorators
 def timedata(func):
     """Times any function"""
@@ -86,17 +83,18 @@ def timedata(func):
         KBsent = sent / 1024
         KBtotal = total / 1024
 
-        fprint(f'{total_time} ms | {KBrecv:.3f}/{KBsent:.3f}/{KBtotal:.3f} KB R/S/T | {psutil.cpu_percent(total_time/1000)} %CPU', 'INFO', Fore.GREEN)
+        fprint(f'{total_time} ms | {KBrecv:.3f}/{KBsent:.3f}/{KBtotal:.3f} KB R/S/T | {psutil.cpu_percent(total_time / 1000)} %CPU', 'INFO', Fore.GREEN)
         print('\n')
 
     return wrapper
+
 
 # def deprecated(func):
 #     """Makes function deprecated"""
 
 #     def wrapper(*args, **kwargs) -> None:
 #         pass
-    
+
 #     return wrapper
 
 
@@ -105,6 +103,7 @@ def timedata(func):
 @cache
 def fprint(text, aux, col) -> object:
     print((f'{col}[{aux}] {text}{Fore.WHITE}' if aux != '' else f"{col}{text}{Fore.WHITE}"))
+
 
 @cache
 def fprint_s(text, aux, stat):
@@ -117,12 +116,11 @@ def fprint_s(text, aux, stat):
 
     print((f'{col}[{aux}] {text}{Fore.WHITE}' if aux != '' else f"{col}{text}{Fore.WHITE}"))
 
+
 @deprecated
-def connect(ip: str="127.0.0.1", port: int=8000) -> object:
+def connect(ip: str = "127.0.0.1", port: int = 8000) -> object:
     connection: list = [ip, port]
     return connection
-
-
 
 
 # Server
@@ -145,7 +143,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
         # CLI request tracking
         i = 0
         for idx, (ip, reqs) in enumerate(CLI_REQs):
-            
+
             if not CLI_REQs[idx][0] == self.client_address[0]:
                 i += 1
                 if i == (len(CLI_REQs)):
@@ -239,7 +237,6 @@ class LoopbackServer(BaseHTTPRequestHandler):
                         )
                         response = 401
 
-
                 if response == 200:
                     file_to_open = open("C:/Network/" + self.path).read()
                 elif self.path == '/server/database_verification.html' and response != 200:
@@ -315,7 +312,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
                 new = self.client_address[0]
                 verifiedADDR += '%s, ' % new
 
-        
+
 
         elif self.path.endswith('/upload'):
             ctype, pdict = cgi.parse_header(self.headers.get('content-type'))
@@ -420,7 +417,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
         self.send_header("Content-type", "text/html")
         self.end_headers()
         fprint(f'-v request', 'SERVER', Fore.CYAN)
-    
+
     def do__t(self):
         self.send_response(200)
         self.send_header("Content-type", "text/html")
@@ -446,13 +443,10 @@ class LoopbackServer(BaseHTTPRequestHandler):
         self.send_header("Content-type", "text/html")
         self.end_headers()
 
-
     def do_SeperateInterfaceID(self):
         seperateIntefaceIP.append([self.client_address[0], self.path])
         self.send_response_only(200)
         self.end_headers()
-
-
 
 
 if __name__ == "__main__":
@@ -499,8 +493,3 @@ if __name__ == "__main__":
         print("COMMAND: ", self.command)
         print("HEADERS: \n", self.headers)
 """
-
-
-
-
-

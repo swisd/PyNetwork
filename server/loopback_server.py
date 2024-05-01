@@ -1,16 +1,13 @@
 """Python 3 loopback server"""
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from time import sleep, perf_counter_ns, strftime, localtime, time
-from typing import Any
 
 import psutil
 from socket import gethostname, gethostbyname
 import http.cookies
 import random
-import os
 import cgi
 from colorama import Fore, Back
-import loopback_ssi
 from deprecated import deprecated
 from functools import cache
 from progressbar_ import bar

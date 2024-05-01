@@ -12,13 +12,13 @@ class ThunderBrowser(QMainWindow):
     def __init__(self):
 
         super(ThunderBrowser, self).__init__()
-        
+
         self.tabs = QTabWidget()
         self.setCentralWidget(self.tabs)
-    
+
         self.window = QWidget()
 
-        self.window.setStyleSheet("background-color: #f0f0ff;" )
+        self.window.setStyleSheet("background-color: #f0f0ff;")
 
         self.layout = QVBoxLayout()
         self.horizontal = QHBoxLayout()
@@ -42,7 +42,6 @@ class ThunderBrowser(QMainWindow):
         self.home_btn = QPushButton("/\\")
         self.home_btn.setMaximumWidth(40)
 
-        
         self.horizontal.addWidget(self.back_btn)
         self.horizontal.addWidget(self.forward_btn)
         self.horizontal.addWidget(self.reload_btn)
@@ -76,11 +75,11 @@ class ThunderBrowser(QMainWindow):
             url = "http://" + url
             self.url_bar.setText(url)
         self.browser.setUrl(QUrl(url))
-    
+
     def add_new_tab(self, qurl=None):
         if qurl is None:
             qurl = QUrl("https://google.com")
-        
+
         self.browser.setUrl(qurl)
 
         i = self.tabs.addTab(self.browser, "New Tab")
@@ -90,9 +89,7 @@ class ThunderBrowser(QMainWindow):
         if index == self.tabs.count() - 1:
             self.add_new_tab()
 
-    
 
 app = QApplication([])
 window = ThunderBrowser()
 app.exec_()
-

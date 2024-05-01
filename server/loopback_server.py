@@ -86,10 +86,10 @@ def timedata(func):
         sent = sent1 - sent0
         total = recv + sent
 
-        KBrecv: float = recv / 1024
-        KBsent: float = sent / 1024
-        KBtotal: float = total / 1024
-        fprint(f'{total_time} ms | {KBrecv:.3f}/{KBsent:.3f}/{KBtotal:.3f} KB R/S/T | {psutil.cpu_percent(total_time / 1000)} %CPU', 'INFO', Fore.GREEN)
+        kb_recv: float = recv / 1024
+        kb_sent: float = sent / 1024
+        kb_total: float = total / 1024
+        fprint(f'{total_time} ms | {kb_recv:.3f}/{kb_sent:.3f}/{kb_total:.3f} KB R/S/T | {psutil.cpu_percent(total_time / 1000)} %CPU', 'INFO', Fore.GREEN)
         if total_time > 30000:
             fprint("Server timed out.", "ERROR", Fore.RED)
         print('\n')
@@ -110,22 +110,24 @@ def timedata(func):
 
 @cache
 def fprint(text, aux, col) -> None:
-    """Print using color"""
+    """Print using color
+    :param text
+    :param aux
+    :param col"""
     print((f'{col}[{aux}] {text}{Fore.WHITE}' if aux != '' else f"{col}{text}{Fore.WHITE}"))
 
 
 @cache
 def fprint_s(text, aux, stat) -> None:
     """Print using status"""
-    global col, col, col, col
     if 100 <= stat <= 299:
-        col = Fore.GREEN
+        color = Fore.GREEN
     elif 300 <= stat <= 399:
-        col = Fore.YELLOW
+        color = Fore.YELLOW
     elif 400 <= stat <= 599:
-        col = Fore.RED
+        color = Fore.RED
 
-    print((f'{col}[{aux}] {text}{Fore.WHITE}' if aux != '' else f"{col}{text}{Fore.WHITE}"))
+    print((f'{color}[{aux}] {text}{Fore.WHITE}' if aux != '' else f"{color}{text}{Fore.WHITE}"))
 
 
 @deprecated
@@ -244,9 +246,11 @@ class LoopbackServer(BaseHTTPRequestHandler):
                         response = 401
 
                 if response == 200:
-                    file_to_open = open("C:/Network/" + self.path).read()
+                    with open("C:/Network/" + self.path) as fto:
+                        file_to_open = fto.read()
                 elif self.path == '/server/database_verification.html' and response != 200:
-                    file_to_open = open("C:/Network/" + self.path).read()
+                    with open("C:/Network/" + self.path) as fto:
+                        file_to_open = fto.read()
                 else:
                     file_to_open = '<head><style>body{margin:4px;font-family:"OCR A";font-size:"75"}</style></head><body> %s Access Denied </body>' % response
 
@@ -256,7 +260,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
                 fprint_s('HDR', response, response)
                 fprint(f"Successfully loaded file {self.path}", 'INFO', Fore.GREEN)
 
-            except Exception(FileExistsError) as e:
+            except FileNotFoundError as e:
                 file_to_open = 'File not found'
                 response = 404
                 self.send_response(response)

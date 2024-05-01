@@ -12,8 +12,10 @@ conn = http.client.HTTPConnection(http_server, 8000)
 
 downloadsDir = "C:/Network/downloads/"
 
+
 def fprint(text, aux, col):
     print((f'{col}[{aux}] {text}{Fore.WHITE}' if aux != '' else f"{col}{text}{Fore.WHITE}"))
+
 
 def fprint_s(text, aux, stat):
     if (stat >= 100 and stat <= 299):
@@ -24,6 +26,7 @@ def fprint_s(text, aux, stat):
         col = Fore.RED
 
     print((f'{col}[{aux}] {text}{Fore.WHITE}' if aux != '' else f"{col}{text}{Fore.WHITE}"))
+
 
 conn.request("SeperateInterfaceID", "RemoteClient")
 rsp = conn.getresponse()
@@ -40,25 +43,21 @@ while 1:
         download = True
         cmd[0] = 'GET'
 
-
     # request command to server
     conn.request(cmd[0], cmd[1])
 
-    
     # get response from server
     rsp = conn.getresponse()
 
     # print server response and data
-    fprint_s(f'{rsp.reason} - {cmd}' , rsp.status, rsp.status)
+    fprint_s(f'{rsp.reason} - {cmd}', rsp.status, rsp.status)
     data_received = rsp.read()
 
     if download:
         print()
-        print(downloadsDir + (cmd[1].removesuffix((cmd[1].split("/"))[len((cmd[1].split("/")))-1])).removeprefix("/db/"))
-        if not os.path.exists(downloadsDir + (cmd[1].removesuffix((cmd[1].split("/"))[len((cmd[1].split("/")))-1])).removeprefix("/db/")):
-            os.makedirs(downloadsDir + (cmd[1].removesuffix((cmd[1].split("/"))[len((cmd[1].split("/")))-1])).removeprefix("/db/"))
-        
-        
+        print(downloadsDir + (cmd[1].removesuffix((cmd[1].split("/"))[len((cmd[1].split("/"))) - 1])).removeprefix("/db/"))
+        if not os.path.exists(downloadsDir + (cmd[1].removesuffix((cmd[1].split("/"))[len((cmd[1].split("/"))) - 1])).removeprefix("/db/")):
+            os.makedirs(downloadsDir + (cmd[1].removesuffix((cmd[1].split("/"))[len((cmd[1].split("/"))) - 1])).removeprefix("/db/"))
 
         items = list(range(0, 20))
         l = len(items)
@@ -67,11 +66,11 @@ while 1:
             # Do stuff...
             sleep(0.1)
             # Update Progress Bar
-            bar(i + 1, l, prefix = 'Downloading:', suffix = 'Complete', length = 10)
+            bar(i + 1, l, prefix='Downloading:', suffix='Complete', length=10)
         with open(downloadsDir + cmd[1].removeprefix("/db/"), "x") as _f:
             _f.write((data_received.decode('utf-8')).split('<plaintext>')[1])
             _f.close()
 
-    #print(data_received.decode('utf-8'))
+    # print(data_received.decode('utf-8'))
 
 conn.close()

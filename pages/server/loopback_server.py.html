@@ -1,37 +1,37 @@
-# Python 3 loopback server 
+<body><plaintext>"""Python 3 loopback server"""
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from time import sleep, perf_counter_ns, strftime, localtime, time
-import psutil
 from socket import gethostname, gethostbyname
 import http.cookies
 import random
 import cgi
-from colorama import Fore, Back
 from functools import cache
-from deprecated import deprecated
 from loopback_ssi import DataManagement
 from progressbar_ import bar
+from colorama import Fore, Back
+from deprecated import deprecated
 from tqdm import tqdm
+import psutil
 
 # Variables
-
-req_s = 0
-reql = []
-clients = []
-idx = 0
-for file in ("C:/Network/f/"):
+exception_curr: str = ''
+req_s: int = 0
+reql: list = []
+clients: list = []
+idx: int = 0
+for file in "C:/Network/f/":
     idx += 1
-file_to_open = ''
+file_to_open: str = ''
 verifiedADDR: str = '127.0.0.1, '
-hostName = gethostname()
-ip_addr = gethostbyname(hostName)
+serverVerifiedAddr: str = '127.0.0.1'
 RLHostName: str = gethostname()
 RLHostIPBaseAddr: str = gethostbyname(RLHostName)
-serverPort = 8000
-chc = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"]
-response = 200
+hostName: str = "localhost"
+ip_addr: str = "127.0.0.1"
+serverPort: int = 8000
+chc: list = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"]
+response: int = 200
 R_LIMIT: int = 10000
-serverVerifiedAddr: str = "127.0.0.1"
 seperateIntefaceIP: list = []
 DDoSAttackPreventionBanIPList: list = []
 CLI_REQs: list[list] = [["0.0.0.0", 0]]
@@ -336,7 +336,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
 
     def do_POST(self):
         """POST data request"""
-        global req_s, verifiedADDR
+        global req_s
         req_s += 1
 
         fprint(f"POST request {self.path}", 'SERVER', Fore.CYAN)

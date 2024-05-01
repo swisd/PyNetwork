@@ -1,5 +1,4 @@
 import http.client
-import sys
 from time import sleep
 
 # get http server ip

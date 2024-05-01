@@ -8,18 +8,20 @@ client = ''
 
 # Functions
 
-def send(data):
-    pass
+class DataManagement:
+    def send(self, data):
+        pass
 
-def handle(client):
-    try:
-        data = client.recv(2048)
-    except:
-        index = clients.index(client)
-        clients.remove(client)
-        client.close()
+    def handle(self, client):
+        self.client = client
+        try:
+            data = self.client.recv(2048)
+        except:
+            index = clients.index(self.client)
+            clients.remove(self.client)
+            self.client.close()
 
-def recieve():
-    thread = threading.Thread(target=handle, args=(client,))
-    thread.start()
+    def recieve(self):
+        thread = threading.Thread(target=DataManagement.handle, args=(client,))
+        thread.start()
 

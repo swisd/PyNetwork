@@ -6,7 +6,7 @@ import http.cookies
 import random
 import cgi
 from functools import cache
-
+from loopback_ssi import DataManagement
 from progressbar_ import bar
 from colorama import Fore, Back
 from deprecated import deprecated
@@ -54,6 +54,9 @@ MOD_KEYWORDS: list = [
 ]
 KEYWORDS: list = []
 
+class Auxillary(DataManagement):
+    def send(self, data):
+        pass
 
 # Decorators
 def timedata(func):

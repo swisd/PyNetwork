@@ -32,13 +32,9 @@ serverPort: int = 8000
 chc: list = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"]
 response: int = 200
 R_LIMIT: int = 10000
-
 seperateIntefaceIP: list = []
-
 DDoSAttackPreventionBanIPList: list = []
-
 CLI_REQs: list[list] = [["0.0.0.0", 0]]
-
 MODS: list = [
     "-s",
     "-d",
@@ -47,9 +43,7 @@ MODS: list = [
     "-m",
     "-r"
 ]
-
 TT_IDENTIFIER: str = "IDENTIFIER"
-
 MOD_KEYWORDS: list = [
     "system",
     "data",
@@ -58,7 +52,6 @@ MOD_KEYWORDS: list = [
     "maintenance",
     "request"
 ]
-
 KEYWORDS: list = []
 
 
@@ -142,12 +135,10 @@ def connect(ip: str = "127.0.0.1", port: int = 8000) -> list:
 @timedata
 class LoopbackServer(BaseHTTPRequestHandler):
     """Loopback Server"""
-    global file_to_open, verifiedADDR, req_s, CLI_REQs, exception_curr
+    global file_to_open, verifiedADDR, req_s
 
     def do_GET(self):
         """GET data request"""
-
-        global req_s, response, verifiedADDR, CLI_REQs, exception_curr
         req_s += 1
 
         # GET cmd
@@ -155,14 +146,15 @@ class LoopbackServer(BaseHTTPRequestHandler):
         response = 200
 
         fprint(f"GET request {self.path}", 'SERVER', Fore.CYAN)
+
         file_to_open: str = '/'
         # CLI request tracking
-        i = 0
+        i_rs = 0
         for idx, (ip, reqs) in enumerate(CLI_REQs):
 
             if not CLI_REQs[idx][0] == self.client_address[0]:
-                i += 1
-                if i == (len(CLI_REQs)):
+                i_rs += 1
+                if i_rs == (len(CLI_REQs)):
                     CLI_REQs.append([self.client_address[0], 1])
                     print(f"REQl {CLI_REQs[idx]} +")
                     break
@@ -179,7 +171,9 @@ class LoopbackServer(BaseHTTPRequestHandler):
                         DDoSAttackPreventionBanIPList.append(self.client_address[0])
 
         self.send_response(response)
+
         fprint_s('HDR', response, response)
+
         self.send_header("Content-type", "text/html")
         cookie = http.cookies.SimpleCookie()
         cookie['ID'] = str(
@@ -200,7 +194,9 @@ class LoopbackServer(BaseHTTPRequestHandler):
                 icon_stream = file_des.read()
             response = 200
             self.send_response(response)
+
             fprint_s('HDR', response, response)
+
             self.send_header("Content-type", "image/vnd.microsoft.icon")
             self.end_headers()
             self.wfile.write(icon_stream)
@@ -210,18 +206,23 @@ class LoopbackServer(BaseHTTPRequestHandler):
 
         if self.path == '/':
             fprint('/ request. - switching to /server/index.html', 'INFO', Fore.GREEN)
+
             self.path = '/server/index.html'
         elif self.path == '/f/upload':
             fprint('/f/upload request. - switching to /server/upload.html', 'INFO', Fore.GREEN)
+
             self.path = '/server/upload.html'
         elif self.path == '/f/download':
             fprint('/f/download request. - switching to /server/download.html', 'INFO', Fore.GREEN)
+
             self.path = '/server/download.html'
         elif self.path == '/db':
             fprint('/db request. - switching to /server/database.html', 'INFO', Fore.GREEN)
+
             self.path = '/server/database.html'
         elif self.path == '/dbverify':
             fprint('/dbverify request. - switching to /server/database_verification.html', 'INFO', Fore.GREEN)
+
             self.path = '/server/database_verification.html'
 
         if not '?' in self.path and not self.path == '/favicon.ico':
@@ -230,19 +231,24 @@ class LoopbackServer(BaseHTTPRequestHandler):
                     fprint(
                         f"Secure Area Access Request from IP {self.client_address[0]}, PORT {self.client_address[1]} - {'VERIFIED' if self.client_address[0] in verifiedADDR else 'UNVERIFIED'}",
                         'WARNING', Fore.YELLOW)
+
                     if self.client_address[0] in verifiedADDR:
                         fprint(f"Secure Area Access Request from IP {self.client_address[0]}, PORT {self.client_address[1]} - OK", "WARNING", Fore.YELLOW)
+
                         response = 200
                     else:
                         fprint(f"Secure Area Access Request from IP {self.client_address[0]}, PORT {self.client_address[1]} - DENIED", "WARNING", Fore.YELLOW)
+
                         response = 401
 
                 if '/server' in self.path and self.path != '/server/index.html':
                     if self.client_address[0] in serverVerifiedAddr:
                         fprint(f"Secure Area Access Request from IP {self.client_address[0]}, PORT {self.client_address[1]} - OK", "WARNING", Fore.YELLOW)
+
                         response = 200
                     else:
                         fprint(f"Secure Area Access Request from IP {self.client_address[0]}, PORT {self.client_address[1]} - DENIED", "WARNING", Fore.YELLOW)
+
                         response = 401
 
                 if response == 200:
@@ -257,35 +263,47 @@ class LoopbackServer(BaseHTTPRequestHandler):
                 fprint(f'FTO: C:/Network/{self.path}', "SERVER", Fore.CYAN)
 
                 self.send_response(response)
+
                 fprint_s('HDR', response, response)
+
                 fprint(f"Successfully loaded file {self.path}", 'INFO', Fore.GREEN)
 
             except FileNotFoundError as e:
                 file_to_open = 'File not found'
                 response = 404
                 self.send_response(response)
+
                 fprint_s('HDR', response, response)
+
                 fprint(f"Requested file '{self.path}' not found. {e}", 'ERROR', Fore.RED)
+
                 fprint(f"Either Server Error or C:/Network{self.path}' unavailable", 'SERVER', Fore.RED)
 
             fprint(f"SERVER: {str(ip_addr + ':' + str(serverPort))}", 'SERVER', Fore.CYAN)
+
             fprint('/' + self.path[1:], 'SERVER', Fore.CYAN)
+
             self.end_headers()
 
         elif '?' in self.path and not self.path == '/favicon.ico':
             response = 500
             self.send_response(response)
+
             fprint_s('HDR', response, response)
+
             self.end_headers()
             self.wfile.write(
                 bytes(
                     f'<html><body><h4>{self.path}<h4><p>Exception occurred during processing of request from {self.client_address}</p><p>{exception_curr}</p></body></html>',
                     "utf-8"))
+
             fprint(f'Exception occurred during processing of request from {self.client_address}', 'ERROR', Fore.RED)
 
         if self.path.endswith("/db"):
             self.wfile.write(bytes(file_to_open, 'utf-8'))
+
             fprint(f'WRITE/STR C:/Network/{self.path} TO CLI @ {self.client_address}', 'SERVER', Fore.CYAN)
+
         unused_a: str = ("\n"
                          "        elif self.path.endswith(\"/dbverify\"):\n"
                          "self.wfile.write(bytes('<head><style>body{margin:4px;font-family:\"OCR A\";}</style></head><body><h1>IP Verification</h1><h3>IP "
@@ -296,23 +314,26 @@ class LoopbackServer(BaseHTTPRequestHandler):
 
         if '/db/' in self.path and not self.path in ('/server/database.html', '/db', '/server/scan/db_scanned.html'):
             self.wfile.write(bytes('<head><style>body{margin:4px;font-family:"OCR A";}</style></head><body><pre><plaintext>%s' % str(file_to_open), 'utf-8'))
+
             fprint(f'WRITE/STR C:/Network/{self.path} TO CLI @ {self.client_address}', 'SERVER', Fore.CYAN)
 
         elif '/server/' in self.path and not ((('/server/index.html' in self.path) or ('/server/database_verification.html' in self.path)) or (
                 '/server/database.html' in self.path) or self.path == '/server/scan/db_scanned.html' or self.path == '/server/scan/main_scanned.html' or self.path == '/server/server_side_interface.html' or self.path == '/server/download.html' or self.path == '/server/upload.html'):
             self.wfile.write(bytes('<head><style>body{margin:4px;font-family:"OCR A";}</style></head><body><plaintext>%s' % str(file_to_open), 'utf-8'))
+
             fprint(f'WRITE/STR C:/Network/{self.path} TO CLI @ {self.client_address}', 'SERVER', Fore.CYAN)
 
         else:
             self.wfile.write(bytes(file_to_open, 'utf-8'))
+
             fprint(f'WRITE C:/Network/{self.path} TO CLI @ {self.client_address}', 'SERVER', Fore.CYAN)
 
         fprint_s('HDR', response, response)
 
     def do_POST(self):
         """POST data request"""
-        global req_s, verifiedADDR
         req_s += 1
+
         fprint(f"POST request {self.path}", 'SERVER', Fore.CYAN)
 
         if self.path.endswith('/dbverify' or '/server/database_verification.html'):
@@ -328,9 +349,10 @@ class LoopbackServer(BaseHTTPRequestHandler):
 
     def do_HEAD(self):
         """HEAD data request"""
-        global req_s
         req_s += 1
+
         fprint(f"HEAD request {self.path}", 'SERVER', Fore.CYAN)
+
         self.send_response(200, "OK")
         self.send_header("Content-type", "text/html")
         cookie = http.cookies.SimpleCookie()
@@ -348,61 +370,66 @@ class LoopbackServer(BaseHTTPRequestHandler):
 
     def do_PUT(self):
         """PUT data request"""
-        global req_s
-        req_s += 1
+
         fprint(f"PUT request {self.path}", 'SERVER', Fore.CYAN)
+
         self.send_response(503)
         self.send_header("Content-type", "text/html")
         self.end_headers()
+
         fprint("Function Unsupported 'PUT'", 'ERROR', Fore.RED)
 
     def do_DELETE(self):
         """DELETE data request"""
-        global req_s
-        req_s += 1
+
         fprint(f"DELETE request {self.path}", 'SERVER', Fore.CYAN)
+
         self.send_response(503)
         self.send_header("Content-type", "text/html")
         self.end_headers()
+
         fprint("Function Unsupported 'DELETE'", 'ERROR', Fore.RED)
 
     def do_CONNECT(self):
         """CONNECT data request"""
-        global req_s
-        req_s += 1
+
         fprint(f"CONNECT request {self.path}", 'SERVER', Fore.CYAN)
+
         self.send_response(503)
         self.send_header("Content-type", "text/html")
         self.end_headers()
+
         fprint("Function Unsupported 'CONNECT'", 'ERROR', Fore.RED)
 
     def do_OPTIONS(self):
         """OPTIONS data request"""
-        global req_s
-        req_s += 1
+
         fprint(f"OPTIONS request {self.path}", 'SERVER', Fore.CYAN)
+
         self.send_response(503)
         self.send_header("Content-type", "text/html")
         self.end_headers()
+
         fprint("Function Unsupported 'OPTIONS'", 'ERROR', Fore.RED)
 
     def do_TRACE(self):
         """TRACE data request"""
-        global req_s
-        req_s += 1
+
         fprint(f"TRACE request {self.path}", 'SERVER', Fore.CYAN)
+
         self.send_response(503)
         self.send_header("Content-type", "text/html")
         self.end_headers()
         date = strftime("%m-%d-%Y %H:%M:%S", localtime(time()))
         self.wfile.write(bytes('{"time": "' + date + '"}', "utf-8"))
+
         fprint("Function Unsupported 'TRACE'", 'ERROR', Fore.LIGHTRED_EX)
 
     def do_PATCH(self):
         """PATCH data request"""
-        global req_s
-        req_s += 1
+
         fprint(f"PATCH request {self.path}", 'SERVER', Fore.CYAN)
+
         self.send_response(503)
         self.send_header("Content-type", "text/html")
         self.end_headers()
@@ -412,6 +439,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
+
         fprint('-s request', 'SERVER', Fore.CYAN)
 
     def do__d(self):
@@ -419,6 +447,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
+
         fprint('-d request', 'SERVER', Fore.CYAN)
 
     def do__v(self):
@@ -426,6 +455,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
+
         fprint('-v request', 'SERVER', Fore.CYAN)
 
     def do__t(self):
@@ -433,6 +463,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
+
         fprint('-t request', 'SERVER', Fore.CYAN)
         date = strftime("%m-%d-%Y %H:%M:%S", localtime(time()))
         self.wfile.write(bytes('{"time": "' + date + '"}', "utf-8"))
@@ -442,6 +473,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
+
         fprint('-m request', 'SERVER', Fore.CYAN)
 
     def do__r(self):
@@ -449,6 +481,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
+
         fprint('-r request', 'SERVER', Fore.CYAN)
 
     def do_signon(self):
@@ -467,14 +500,18 @@ class LoopbackServer(BaseHTTPRequestHandler):
             sleep(0.025)
         self.end_headers()
         self.wfile.write(bytes(f"ID {[self.client_address[0], self.path]} Approved", "utf-8"))
+
         fprint(f"SeperateInterfaceID {self.path} @ {self.client_address[0]}", 'SERVER', Fore.CYAN)
 
 
 if __name__ == "__main__":
 
     fprint('', '', Back.RESET)
+
     fprint("Loopback Testing Server - Isolated Run Only", "INFO", Fore.YELLOW)
+
     fprint("Features of this server are in development and not intended for full use.\nFor more information, visit avrx-ucs.com/py_loopback", "", Fore.YELLOW)
+
     items = list(range(0, 50))
     l = len(items)
 

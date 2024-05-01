@@ -1,17 +1,17 @@
 """Python 3 loopback server"""
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from time import sleep, perf_counter_ns, strftime, localtime, time
-
-import psutil
 from socket import gethostname, gethostbyname
 import http.cookies
 import random
 import cgi
+from functools import cache
+
+from progressbar_ import bar
 from colorama import Fore, Back
 from deprecated import deprecated
-from functools import cache
-from progressbar_ import bar
 from tqdm import tqdm
+import psutil
 
 # Variables
 exception_curr: str = ''
@@ -19,7 +19,7 @@ req_s: int = 0
 reql: list = []
 clients: list = []
 idx: int = 0
-for file in ("C:/Network/f/"):
+for file in "C:/Network/f/":
     idx += 1
 file_to_open: str = ''
 verifiedADDR: str = '127.0.0.1, '
@@ -67,6 +67,11 @@ def timedata(func):
     """Times any function"""
 
     def wrapper(*args, **kwargs):
+        """
+
+        :param args:
+        :param kwargs:
+        """
         recv0 = psutil.net_io_counters().bytes_recv
         sent0 = psutil.net_io_counters().bytes_sent
         start_time = perf_counter_ns()
@@ -84,7 +89,6 @@ def timedata(func):
         KBrecv: float = recv / 1024
         KBsent: float = sent / 1024
         KBtotal: float = total / 1024
-
         fprint(f'{total_time} ms | {KBrecv:.3f}/{KBsent:.3f}/{KBtotal:.3f} KB R/S/T | {psutil.cpu_percent(total_time / 1000)} %CPU', 'INFO', Fore.GREEN)
         if total_time > 30000:
             fprint("Server timed out.", "ERROR", Fore.RED)
@@ -105,14 +109,15 @@ def timedata(func):
 # Functions
 
 @cache
-def fprint(text, aux, col) -> object:
+def fprint(text, aux, col) -> None:
     """Print using color"""
     print((f'{col}[{aux}] {text}{Fore.WHITE}' if aux != '' else f"{col}{text}{Fore.WHITE}"))
 
 
 @cache
-def fprint_s(text, aux, stat):
+def fprint_s(text, aux, stat) -> None:
     """Print using status"""
+    global col, col, col, col
     if 100 <= stat <= 299:
         col = Fore.GREEN
     elif 300 <= stat <= 399:
@@ -124,7 +129,8 @@ def fprint_s(text, aux, stat):
 
 
 @deprecated
-def connect(ip: str = "127.0.0.1", port: int = 8000) -> object:
+def connect(ip: str = "127.0.0.1", port: int = 8000) -> list:
+    """Connect to IP and Port"""
     connection: list = [ip, port]
     return connection
 
@@ -133,9 +139,11 @@ def connect(ip: str = "127.0.0.1", port: int = 8000) -> object:
 # @cache
 @timedata
 class LoopbackServer(BaseHTTPRequestHandler):
+    """Loopback Server"""
     global file_to_open, verifiedADDR, req_s, CLI_REQs, exception_curr
 
     def do_GET(self):
+        """GET data request"""
 
         global req_s, response, verifiedADDR, CLI_REQs, exception_curr
         req_s += 1
@@ -186,8 +194,8 @@ class LoopbackServer(BaseHTTPRequestHandler):
         fprint(f'PATH: {self.path}', 'SERVER', Fore.CYAN)
 
         if self.path == '/favicon.ico':
-            file_des = open("C:/Network/favicon.ico", 'rb')  # as binary
-            icon_stream = file_des.read()
+            with open("C:/Network/favicon.ico", 'rb') as file_des:
+                icon_stream = file_des.read()
             response = 200
             self.send_response(response)
             fprint_s('HDR', response, response)
@@ -221,26 +229,18 @@ class LoopbackServer(BaseHTTPRequestHandler):
                         f"Secure Area Access Request from IP {self.client_address[0]}, PORT {self.client_address[1]} - {'VERIFIED' if self.client_address[0] in verifiedADDR else 'UNVERIFIED'}",
                         'WARNING', Fore.YELLOW)
                     if self.client_address[0] in verifiedADDR:
-                        fprint(
-                            f"Secure Area Access Request from IP {self.client_address[0]}, PORT {self.client_address[1]} - OK", "WARNING", Fore.YELLOW
-                        )
+                        fprint(f"Secure Area Access Request from IP {self.client_address[0]}, PORT {self.client_address[1]} - OK", "WARNING", Fore.YELLOW)
                         response = 200
                     else:
-                        fprint(
-                            f"Secure Area Access Request from IP {self.client_address[0]}, PORT {self.client_address[1]} - DENIED", "WARNING", Fore.YELLOW
-                        )
+                        fprint(f"Secure Area Access Request from IP {self.client_address[0]}, PORT {self.client_address[1]} - DENIED", "WARNING", Fore.YELLOW)
                         response = 401
 
                 if '/server' in self.path and self.path != '/server/index.html':
                     if self.client_address[0] in serverVerifiedAddr:
-                        fprint(
-                            f"Secure Area Access Request from IP {self.client_address[0]}, PORT {self.client_address[1]} - OK", "WARNING", Fore.YELLOW
-                        )
+                        fprint(f"Secure Area Access Request from IP {self.client_address[0]}, PORT {self.client_address[1]} - OK", "WARNING", Fore.YELLOW)
                         response = 200
                     else:
-                        fprint(
-                            f"Secure Area Access Request from IP {self.client_address[0]}, PORT {self.client_address[1]} - DENIED", "WARNING", Fore.YELLOW
-                        )
+                        fprint(f"Secure Area Access Request from IP {self.client_address[0]}, PORT {self.client_address[1]} - DENIED", "WARNING", Fore.YELLOW)
                         response = 401
 
                 if response == 200:
@@ -306,33 +306,24 @@ class LoopbackServer(BaseHTTPRequestHandler):
         fprint_s('HDR', response, response)
 
     def do_POST(self):
+        """POST data request"""
         global req_s, verifiedADDR
         req_s += 1
         fprint(f"POST request {self.path}", 'SERVER', Fore.CYAN)
 
         if self.path.endswith('/dbverify' or '/server/database_verification.html'):
             ctype, pdict = cgi.parse_header(self.headers.get('Content-type'))
-            pdict['boundary'] = bytes(pdict["boundary"], 'utf-8')
             if ctype == 'multipart/form-data':
-                fields = cgi.parse_multipart(self.rfile, pdict)
                 new = self.client_address[0]
                 verifiedADDR += f'{new}, '
 
         # TODO: Fix upload system so that it is usable
 
         elif self.path.endswith('/upload'):
-            ctype, pdict = cgi.parse_header(self.headers.get('content-type'))
-            pdict['boundary'] = bytes(pdict["boundary"], 'utf-8')
-            if ctype == 'multipart/form-data':
-                fields = cgi.parse_multipart(self.rfile, pdict)
-                new_file = fields.get('nwfile')
-
-            self.send_response(301)
-            self.send_header("Content-type", "text/html")
-            self.send_header('Location', f'/f/{new_file}')
-            self.end_headers()
+            pass
 
     def do_HEAD(self):
+        """HEAD data request"""
         global req_s
         req_s += 1
         fprint(f"HEAD request {self.path}", 'SERVER', Fore.CYAN)
@@ -352,6 +343,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_PUT(self):
+        """PUT data request"""
         global req_s
         req_s += 1
         fprint(f"PUT request {self.path}", 'SERVER', Fore.CYAN)
@@ -361,6 +353,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
         fprint("Function Unsupported 'PUT'", 'ERROR', Fore.RED)
 
     def do_DELETE(self):
+        """DELETE data request"""
         global req_s
         req_s += 1
         fprint(f"DELETE request {self.path}", 'SERVER', Fore.CYAN)
@@ -370,6 +363,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
         fprint("Function Unsupported 'DELETE'", 'ERROR', Fore.RED)
 
     def do_CONNECT(self):
+        """CONNECT data request"""
         global req_s
         req_s += 1
         fprint(f"CONNECT request {self.path}", 'SERVER', Fore.CYAN)
@@ -379,6 +373,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
         fprint("Function Unsupported 'CONNECT'", 'ERROR', Fore.RED)
 
     def do_OPTIONS(self):
+        """OPTIONS data request"""
         global req_s
         req_s += 1
         fprint(f"OPTIONS request {self.path}", 'SERVER', Fore.CYAN)
@@ -388,6 +383,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
         fprint("Function Unsupported 'OPTIONS'", 'ERROR', Fore.RED)
 
     def do_TRACE(self):
+        """TRACE data request"""
         global req_s
         req_s += 1
         fprint(f"TRACE request {self.path}", 'SERVER', Fore.CYAN)
@@ -399,6 +395,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
         fprint("Function Unsupported 'TRACE'", 'ERROR', Fore.LIGHTRED_EX)
 
     def do_PATCH(self):
+        """PATCH data request"""
         global req_s
         req_s += 1
         fprint(f"PATCH request {self.path}", 'SERVER', Fore.CYAN)
@@ -407,24 +404,28 @@ class LoopbackServer(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do__s(self):
+        """-s data request"""
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
         fprint('-s request', 'SERVER', Fore.CYAN)
 
     def do__d(self):
+        """-d data request"""
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
         fprint('-d request', 'SERVER', Fore.CYAN)
 
     def do__v(self):
+        """-v data request"""
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
         fprint('-v request', 'SERVER', Fore.CYAN)
 
     def do__t(self):
+        """-t data request"""
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
@@ -433,30 +434,32 @@ class LoopbackServer(BaseHTTPRequestHandler):
         self.wfile.write(bytes('{"time": "' + date + '"}', "utf-8"))
 
     def do__m(self):
+        """-m data request"""
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
         fprint('-m request', 'SERVER', Fore.CYAN)
 
     def do__r(self):
+        """-r data request"""
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
         fprint('-r request', 'SERVER', Fore.CYAN)
 
     def do_signon(self):
+        """signon data request"""
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
 
     def do_SeperateInterfaceID(self):
+        """SeperateInterfaceID data request"""
         seperateIntefaceIP.append([self.client_address[0], self.path])
         self.send_response(200)
         self.send_header("Content-type", "text/html")
-        items = list(range(0, 12))
-        l = len(items)
 
-        for i in tqdm(range(100), ncols=50):
+        for _ in tqdm(range(100), ncols=50):
             sleep(0.025)
         self.end_headers()
         self.wfile.write(bytes(f"ID {[self.client_address[0], self.path]} Approved", "utf-8"))
@@ -505,6 +508,7 @@ if __name__ == "__main__":
         bar(i + 1, l, prefix='Starting:          ', suffix=suffix, length=25)
         IH += 1
 
+    # noinspection PyTypeChecker
     webServer: HTTPServer = HTTPServer((hostName, serverPort), LoopbackServer)
     fprint(f"Server started http://{hostName}:{serverPort} @ {ip_addr}", 'SERVER', Fore.CYAN)
     fprint(f"Server started http://{RLHostName}:{serverPort} @ {RLHostIPBaseAddr}", 'SERVER', Fore.CYAN)

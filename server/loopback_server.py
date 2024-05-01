@@ -142,6 +142,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
 
     def do_GET(self):
         """GET data request"""
+        global req_s, file_to_open, verifiedADDR
         req_s += 1
 
         # GET cmd
@@ -150,7 +151,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
 
         fprint(f"GET request {self.path}", 'SERVER', Fore.CYAN)
 
-        file_to_open: str = '/'
+        file_to_open = '/'
         # CLI request tracking
         i_rs = 0
         for idx, (ip, reqs) in enumerate(CLI_REQs):
@@ -335,6 +336,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
 
     def do_POST(self):
         """POST data request"""
+        global req_s
         req_s += 1
 
         fprint(f"POST request {self.path}", 'SERVER', Fore.CYAN)
@@ -352,6 +354,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
 
     def do_HEAD(self):
         """HEAD data request"""
+        global req_s
         req_s += 1
 
         fprint(f"HEAD request {self.path}", 'SERVER', Fore.CYAN)

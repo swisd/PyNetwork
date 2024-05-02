@@ -22,7 +22,7 @@ idx = 0
 for file in ("C:/Network/f/"):
     idx += 1
 file_to_open = ''
-verifiedADDR: str = '127.0.0.1, '
+verifiedADDR: str = '127.0.0.1, 10.1.110.125'
 hostName = gethostname()
 ip_addr = gethostbyname(hostName)
 RLHostName: str = gethostname()
@@ -302,7 +302,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(
                 bytes(
-                    f'<html><body><h4>{self.path}<h4><p>Exception occurred during processing of request from {self.client_address}</p><p>{exception_curr}</p></body></html>',
+                    f'<html><body><h4>{self.path}<h4><p>Exception occurred during processing of request from {self.client_address}</p><p>{0}</p></body></html>',
                     "utf-8"))
 
             fprint(f'Exception occurred during processing of request from {self.client_address}', 'ERROR', Fore.RED)

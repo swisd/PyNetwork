@@ -347,7 +347,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
                 new = self.client_address[0]
                 verifiedADDR += f'{new}, '
 
-        # TODO: Fix upload system so that it is usable
+        # todo: Fix upload system so that it is usable
 
         elif self.path.endswith('/upload'):
             pass

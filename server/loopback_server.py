@@ -53,10 +53,13 @@ MOD_KEYWORDS: list = [
     "request"
 ]
 KEYWORDS: list = []
+Logging: bool = True
+
 
 class Auxillary(DataManagement):
     def send(self, data):
         pass
+
 
 # Decorators
 def timedata(func):
@@ -162,6 +165,10 @@ class LoopbackServer(BaseHTTPRequestHandler):
                     CLI_REQs.append([self.client_address[0], 1])
                     print(f"REQl {CLI_REQs[idx]} +")
                     break
+
+                with open("iplog.txt", "w") as Log:
+                    Log.write(CLI_REQs)
+                    Log.close()
 
             else:
                 print('h', end=' ')

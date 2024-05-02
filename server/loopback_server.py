@@ -4,6 +4,7 @@ from time import sleep, perf_counter_ns, strftime, localtime, time
 from socket import gethostname, gethostbyname
 import http.cookies
 import random
+# 'cgi' is deprecated and slated for removal in python 3.13
 import cgi
 from functools import cache
 from loopback_ssi import DataManagement

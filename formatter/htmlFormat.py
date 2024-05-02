@@ -12,7 +12,7 @@ def scan_dir(dir: str) -> None:
             if not ((dir.startswith("C:/Network/.git")
                      or dir.startswith("C:/Network/.venv")) or ((".gitignore" in filename)
                                                                 or (".idea" in dir) or ("enc.comp" in dir)
-                                                                or ("/f" in dir)) or ('/db' in dir) or ("/downloads" in dir)):
+                                                                or ("/f" in dir)) or ('/db' in dir) or ("/downloads" in dir) or ("/server" in dir)):
                 print("FILE:", _f)
                 with open(_f, "r", errors='ignore') as readr:
                     temp_str = readr.read()

@@ -343,7 +343,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
 
     def do_POST(self):
         """POST data request"""
-        global req_s
+        global req_s, verifiedADDR
         req_s += 1
 
         fprint(f"POST request {self.path}", 'SERVER', Fore.CYAN)

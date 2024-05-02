@@ -163,6 +163,10 @@ class LoopbackServer(BaseHTTPRequestHandler):
                     print(f"REQl {CLI_REQs[idx]} +")
                     break
 
+                with open("iplog.txt", "w") as Log:
+                    Log.write(str(CLI_REQs))
+                    Log.close()
+
             else:
                 print('h', end=' ')
                 if CLI_REQs[idx][0] == self.client_address[0]:

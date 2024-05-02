@@ -167,7 +167,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
                     break
 
                 with open("iplog.txt", "w") as Log:
-                    Log.write(CLI_REQs)
+                    Log.write(str(CLI_REQs))
                     Log.close()
 
             else:

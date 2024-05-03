@@ -136,10 +136,10 @@ def connect(ip: str = "127.0.0.1", port: int = 8000) -> list:
     connection: list = [ip, port]
     return connection
 
-def handle(clientIP, serverIP: str = '127.0.0.1', header=None, limit=None, key=None):
+def handle(clientIP: object, serverIP: str = '127.0.0.1', header: object = None, limit: object = None, key: object = None) -> object:
     connection = connect()
-    fprint(f"connnected {serverIP}, {clientIP} on {connection}")
-    fprint(f"Handling request @{clientIP}")
+    fprint(f"connnected {serverIP}, {clientIP} on {connection}", "HANDLER", Fore.YELLOW)
+    fprint(f"Handling request @{clientIP}", "HANDLER", Fore.YELLOW)
     return connection, limit, header
 
 # Server
@@ -158,7 +158,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
 
         response = 200
 
-        handle()
+        handle(self.client_address[0])
 
         fprint(f"GET request {self.path}", 'SERVER', Fore.CYAN)
 

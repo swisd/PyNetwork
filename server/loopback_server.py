@@ -130,12 +130,17 @@ def fprint_s(text, aux, stat) -> None:
     print((f'{color}[{aux}] {text}{Fore.WHITE}' if aux != '' else f"{color}{text}{Fore.WHITE}"))
 
 
-@deprecated
+
 def connect(ip: str = "127.0.0.1", port: int = 8000) -> list:
     """Connect to IP and Port"""
     connection: list = [ip, port]
     return connection
 
+def handle(clientIP, serverIP: str = '127.0.0.1', header=None, limit=None, key=None):
+    connection = connect()
+    fprint(f"connnected {serverIP}, {clientIP} on {connection}")
+    fprint(f"Handling request @{clientIP}")
+    return connection, limit, header
 
 # Server
 # @cache
@@ -152,6 +157,8 @@ class LoopbackServer(BaseHTTPRequestHandler):
         # GET cmd
 
         response = 200
+
+        handle()
 
         fprint(f"GET request {self.path}", 'SERVER', Fore.CYAN)
 

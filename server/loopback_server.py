@@ -710,7 +710,7 @@ if __name__ == "__main__":
         IH += 1
 
     # noinspection PyTypeChecker
-
+    webServer: HTTPServer = HTTPServer((hostName, serverPort), LoopbackServer)
     fprint(f"Server started http://{hostName}:{serverPort} @ {ip_addr}", 'SERVER', Fore.CYAN)
     fprint(f"Server started ftp://{hostName}:{21} @ {ip_addr}", 'SERVER', Fore.CYAN)
     fprint(f"Server started http://{RLHostName}:{serverPort} @ {RLHostIPBaseAddr}", 'SERVER', Fore.CYAN)

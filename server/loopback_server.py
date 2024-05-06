@@ -4,6 +4,7 @@ from time import sleep, perf_counter_ns, strftime, localtime, time
 from socket import gethostname, gethostbyname
 import http.cookies
 import random
+import asyncio
 # 'cgi' is deprecated and slated for removal in python 3.13
 import cgi
 from functools import cache
@@ -13,6 +14,10 @@ from colorama import Fore, Back
 from deprecated import deprecated
 from tqdm import tqdm
 import psutil
+from twisted.cred.checkers import AllowAnonymousAccess, InMemoryUsernamePasswordDatabaseDontUse
+from twisted.cred.portal import Portal
+from twisted.internet import reactor
+from twisted.protocols.ftp import FTPFactory, FTPRealm
 
 import customtkinter
 
@@ -22,15 +27,19 @@ customtkinter.set_appearance_mode("dark")  # Modes: "System" (standard), "Dark",
 customtkinter.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
 
 app = customtkinter.CTk()
-app.geometry("600x780")
+app.geometry("600x880")
 app.title("LoopbackServerA1 Config")
 
 
 
 def start_serv():
     print(f"Protocol: {optionmenu_1.get()}")
+    protocol = optionmenu_1.get()
     print(f"TDM: {switch_3.get()}")
+    TDM = switch_3.get()
     print(f"IP Addr: {combobox_1.get()}")
+    print(f"HTTP Port: {combobox_6.get()}")
+    print(f"FTP Port: {combobox_7.get()}")
     print(f"IP Log: {switch_1.get()}")
     print(f"Errors: {switch_2.get()}")
     print(f"IPCs: {switch_4.get()}")
@@ -62,6 +71,12 @@ label_2.pack(pady=10, padx=10)
 combobox_1 = customtkinter.CTkOptionMenu(frame_1, values=["127.0.0.1", "Pre-Assigned", "Other"])
 combobox_1.pack(pady=10, padx=10)
 combobox_1.set("Default IP")
+combobox_6 = customtkinter.CTkOptionMenu(frame_1, values=["8000", "Pre-Assigned", "Other"])
+combobox_6.pack(pady=10, padx=10)
+combobox_6.set("HTTP Port")
+combobox_7 = customtkinter.CTkOptionMenu(frame_1, values=["21", "Pre-Assigned", "Other"])
+combobox_7.pack(pady=10, padx=10)
+combobox_7.set("FTP Port")
 
 switch_1 = customtkinter.CTkSwitch(master=frame_1, text='IP Logging')
 switch_1.pack(pady=10, padx=10)
@@ -80,7 +95,7 @@ label_5.pack(pady=10, padx=10)
 
 text_1 = customtkinter.CTkTextbox(master=frame_1, width=200, height=70)
 text_1.pack(pady=10, padx=10)
-text_1.insert("0.0", "")
+text_1.insert("0.0", "start:none:any\nserver:start.load")
 
 
 checkbox_1 = customtkinter.CTkCheckBox(master=frame_1, text='SDL')
@@ -104,12 +119,12 @@ idx: int = 0
 for file in "C:/Network/f/":
     idx += 1
 file_to_open: str = ''
+ip_addr: str = "127.0.0.1"
 verifiedADDR: str = '127.0.0.1, '
 serverVerifiedAddr: str = '127.0.0.1'
 RLHostName: str = gethostname()
 RLHostIPBaseAddr: str = gethostbyname(RLHostName)
 hostName: str = "localhost"
-ip_addr: str = "127.0.0.1"
 serverPort: int = 8000
 chc: list = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"]
 response: int = 200
@@ -508,11 +523,10 @@ class LoopbackServer(BaseHTTPRequestHandler):
 
         fprint(f"OPTIONS request {self.path}", 'SERVER', Fore.CYAN)
 
-        self.send_response(503)
-        self.send_header("Content-type", "text/html")
+        self.send_response(204)
+        self.send_header("Allow", "OPTIONS, GET, HEAD, POST")
         self.end_headers()
 
-        fprint("Function Unsupported 'OPTIONS'", 'ERROR', Fore.RED)
 
     def do_TRACE(self):
         """TRACE data request"""
@@ -605,6 +619,12 @@ class LoopbackServer(BaseHTTPRequestHandler):
 
         fprint(f"SeperateInterfaceID {self.path} @ {self.client_address[0]}", 'SERVER', Fore.CYAN)
 
+    def do_PROPFIND(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+        self.wfile.write(bytes('<?xml version="1.0"?><a:multistatus xmlns:b="urn:uuid:c2f41010-65b3-11d1-a29f-00aa00c14882/" xmlns:a="DAV:"><a:response><a:href>https://127.0.0.1:8000/</a:href><a:propstat><a:status>HTTP/1.1 200 OK</a:status><a:prop><a:getcontenttype>text/plain</a:getcontenttype><a:getcontentlength b:dt="int">1870</a:getcontentlength></a:prop></a:propstat></a:response></a:multistatus>', "utf-8"))
+        print(self.responses)
 
 if __name__ == "__main__":
 
@@ -654,11 +674,24 @@ if __name__ == "__main__":
     # noinspection PyTypeChecker
     webServer: HTTPServer = HTTPServer((hostName, serverPort), LoopbackServer)
     fprint(f"Server started http://{hostName}:{serverPort} @ {ip_addr}", 'SERVER', Fore.CYAN)
+    fprint(f"Server started ftp://{hostName}:{21} @ {ip_addr}", 'SERVER', Fore.CYAN)
     fprint(f"Server started http://{RLHostName}:{serverPort} @ {RLHostIPBaseAddr}", 'SERVER', Fore.CYAN)
     fprint(f'Listening on port {serverPort} ...', 'INFO', Fore.GREEN)
 
     try:
-        webServer.serve_forever()
+        checker = InMemoryUsernamePasswordDatabaseDontUse()
+        checker.addUser("admin", "ls@256$")
+
+        portal = Portal(FTPRealm("./public"), [AllowAnonymousAccess()])
+
+        factory = FTPFactory(portal)
+
+        async def main():
+            reactor.listenTCP(21, factory)
+            await asyncio.gather(webServer.serve_forever(), reactor.run())
+
+        asyncio.run(main())
+
     except KeyboardInterrupt:
         pass
 

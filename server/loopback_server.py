@@ -4,7 +4,7 @@ from time import sleep, perf_counter_ns, strftime, localtime, time
 from socket import gethostname, gethostbyname
 import http.cookies
 import random
-import asyncio
+import _thread
 import multiprocessing
 # 'cgi' is deprecated and slated for removal in python 3.13
 import cgi
@@ -647,6 +647,23 @@ class LoopbackServer(BaseHTTPRequestHandler):
         fprint("Server timed out.", "ERROR", Fore.RED)
     print('\n')
 
+
+def run_http():
+    webServer: HTTPServer = HTTPServer((hostName, serverPort), LoopbackServer)
+    webServer.serve_forever()
+def run_ftp():
+    checker = InMemoryUsernamePasswordDatabaseDontUse()
+    checker.addUser("admin", "ls@256$")
+
+    portal = Portal(FTPRealm("./public"), [AllowAnonymousAccess()])
+
+    factory = FTPFactory(portal)
+
+    reactor.run()
+
+
+
+
 if __name__ == "__main__":
 
     fprint('', '', Back.RESET)
@@ -693,31 +710,16 @@ if __name__ == "__main__":
         IH += 1
 
     # noinspection PyTypeChecker
-    webServer: HTTPServer = HTTPServer((hostName, serverPort), LoopbackServer)
+
     fprint(f"Server started http://{hostName}:{serverPort} @ {ip_addr}", 'SERVER', Fore.CYAN)
     fprint(f"Server started ftp://{hostName}:{21} @ {ip_addr}", 'SERVER', Fore.CYAN)
     fprint(f"Server started http://{RLHostName}:{serverPort} @ {RLHostIPBaseAddr}", 'SERVER', Fore.CYAN)
     fprint(f'Listening on port {serverPort} ...', 'INFO', Fore.GREEN)
 
-    try:
-        checker = InMemoryUsernamePasswordDatabaseDontUse()
-        checker.addUser("admin", "ls@256$")
-
-        portal = Portal(FTPRealm("./public"), [AllowAnonymousAccess()])
-
-        factory = FTPFactory(portal)
-
-        p1 = multiprocessing.Process(target=webServer.serve_forever)
-        p2 = multiprocessing.Process(target=reactor.run)
-
-        # starting process 1
-        p1.start()
-        # starting process 2
-        p2.start()
-
-    except KeyboardInterrupt:
-        pass
-
+    p1 = multiprocessing.Process(name='p1', target=run_http)
+    p = multiprocessing.Process(name='p', target=run_ftp)
+    p1.start()
+    p.start()
     webServer.server_close()
     sleep(0)
     print("Server stopped.")

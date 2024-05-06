@@ -5,6 +5,7 @@ from socket import gethostname, gethostbyname
 import http.cookies
 import random
 import asyncio
+import multiprocessing
 # 'cgi' is deprecated and slated for removal in python 3.13
 import cgi
 from functools import cache
@@ -240,9 +241,13 @@ def handle(clientIP: object, serverIP: str = '127.0.0.1', header: object = None,
 
 # Server
 # @cache
-@timedata
+
 class LoopbackServer(BaseHTTPRequestHandler):
     """Loopback Server"""
+
+    recv0 = psutil.net_io_counters().bytes_recv
+    sent0 = psutil.net_io_counters().bytes_sent
+    start_time = perf_counter_ns()
     global file_to_open, verifiedADDR, req_s
 
     def do_GET(self):
@@ -626,6 +631,22 @@ class LoopbackServer(BaseHTTPRequestHandler):
         self.wfile.write(bytes('<?xml version="1.0"?><a:multistatus xmlns:b="urn:uuid:c2f41010-65b3-11d1-a29f-00aa00c14882/" xmlns:a="DAV:"><a:response><a:href>https://127.0.0.1:8000/</a:href><a:propstat><a:status>HTTP/1.1 200 OK</a:status><a:prop><a:getcontenttype>text/plain</a:getcontenttype><a:getcontentlength b:dt="int">1870</a:getcontentlength></a:prop></a:propstat></a:response></a:multistatus>', "utf-8"))
         print(self.responses)
 
+    end_time = perf_counter_ns()
+    total_time = round((end_time - start_time) / 1000000, 3)
+    recv1 = psutil.net_io_counters().bytes_recv
+    sent1 = psutil.net_io_counters().bytes_sent
+    recv = recv1 - recv0
+    sent = sent1 - sent0
+    total = recv + sent
+
+    kb_recv: float = recv / 1024
+    kb_sent: float = sent / 1024
+    kb_total: float = total / 1024
+    fprint(f'{total_time} ms | {kb_recv:.3f}/{kb_sent:.3f}/{kb_total:.3f} KB R/S/T | {psutil.cpu_percent(total_time / 1000)} %CPU', 'INFO', Fore.GREEN)
+    if total_time > 30000:
+        fprint("Server timed out.", "ERROR", Fore.RED)
+    print('\n')
+
 if __name__ == "__main__":
 
     fprint('', '', Back.RESET)
@@ -686,11 +707,13 @@ if __name__ == "__main__":
 
         factory = FTPFactory(portal)
 
-        async def main():
-            reactor.listenTCP(21, factory)
-            await asyncio.gather(webServer.serve_forever(), reactor.run())
+        p1 = multiprocessing.Process(target=webServer.serve_forever)
+        p2 = multiprocessing.Process(target=reactor.run)
 
-        asyncio.run(main())
+        # starting process 1
+        p1.start()
+        # starting process 2
+        p2.start()
 
     except KeyboardInterrupt:
         pass

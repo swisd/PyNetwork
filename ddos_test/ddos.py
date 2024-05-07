@@ -6,7 +6,7 @@ http_server = '127.0.0.1'
 # create a connection
 conn = http.client.HTTPConnection(http_server, 8000)
 cmd = input('input command (ex. GET index.html): ')
-delay = input("Send Delay (ms):")
+delay = int(input("Send Delay (ms):"))
 cmd = cmd.split()
 while 1:
 

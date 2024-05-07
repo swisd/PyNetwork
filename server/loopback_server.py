@@ -4,21 +4,14 @@ from time import sleep, perf_counter_ns, strftime, localtime, time
 from socket import gethostname, gethostbyname
 import http.cookies
 import random
-import _thread
-import multiprocessing
 # 'cgi' is deprecated and slated for removal in python 3.13
 import cgi
 from functools import cache
 from loopback_ssi import DataManagement
 from progressbar_ import bar
 from colorama import Fore, Back
-from deprecated import deprecated
 from tqdm import tqdm
 import psutil
-from twisted.cred.checkers import AllowAnonymousAccess, InMemoryUsernamePasswordDatabaseDontUse
-from twisted.cred.portal import Portal
-from twisted.internet import reactor
-from twisted.protocols.ftp import FTPFactory, FTPRealm
 
 import customtkinter
 
@@ -206,7 +199,7 @@ def timedata(func):
 # Functions
 
 @cache
-def fprint(text, aux, col) -> None:
+def fprint(text: object, aux: object, col: object) -> None:
     """Print using color
     :param text
     :param aux
@@ -242,6 +235,7 @@ def handle(clientIP: object, serverIP: str = '127.0.0.1', header: object = None,
 # Server
 # @cache
 
+
 class LoopbackServer(BaseHTTPRequestHandler):
     """Loopback Server"""
 
@@ -272,7 +266,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
                 i_rs += 1
                 if i_rs == (len(CLI_REQs)):
                     CLI_REQs.append([self.client_address[0], 1])
-                    print(f"REQl {CLI_REQs[idx]} +")
+                    fprint(f"REQl {CLI_REQs[idx]} +", "APS", Fore.GREEN)
                     break
 
                 with open("iplog.txt", "w") as Log:
@@ -280,15 +274,15 @@ class LoopbackServer(BaseHTTPRequestHandler):
                     Log.close()
 
             else:
-                print('h', end=' ')
                 if CLI_REQs[idx][0] == self.client_address[0]:
                     reqs += 1
                     CLI_REQs[idx][1] = reqs
-                    print(f"REQl {CLI_REQs[idx]} A")
+                    fprint(f"REQl {CLI_REQs[idx]} A", "APS", Fore.GREEN)
                     if CLI_REQs[idx][1] >= R_LIMIT:
                         response = 429
                         fprint(f"Service denied to {self.client_address[0]} due to possible DDoS Attack", "WARNING", Fore.LIGHTRED_EX)
                         DDoSAttackPreventionBanIPList.append(self.client_address[0])
+                        break
 
         self.send_response(response)
 
@@ -345,7 +339,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
 
             self.path = '/server/database_verification.html'
 
-        if not '?' in self.path and not self.path == '/favicon.ico':
+        if not ('?' in self.path and "nwfile=" in self.path) and not self.path == '/favicon.ico':
             try:
                 if '/db' in self.path:
                     fprint(
@@ -406,18 +400,44 @@ class LoopbackServer(BaseHTTPRequestHandler):
             self.end_headers()
 
         elif '?' in self.path and not self.path == '/favicon.ico':
-            response = 500
-            self.send_response(response)
 
-            fprint_s('HDR', response, response)
+            if "_script.py?nwfile=" in self.path:
+                response = 200
+                self.send_response(response)
+                self.send_header("Content-type", "text/html")
+                fprint_s('HDR', response, response)
 
-            self.end_headers()
-            self.wfile.write(
-                bytes(
-                    f'<html><body><h4>{self.path}<h4><p>Exception occurred during processing of request from {self.client_address}</p><p>{exception_curr}</p></body></html>',
-                    "utf-8"))
+                self.end_headers()
+                 
+                fprint(f"Upload {(self.path.split("="))[1]}", "INFO", Fore.YELLOW)
 
-            fprint(f'Exception occurred during processing of request from {self.client_address}', 'ERROR', Fore.RED)
+                try:
+                    with open("C:/Network/db/public/" + str((self.path.split("="))[1]), "x") as _f:
+                        _f.write("")
+                        _f.close()
+                        fprint("Upload success.", "INFO", Fore.GREEN)
+                        self.wfile.write(bytes("<style>p{color: green;}</style><p>Upload success</p>", "utf-8"))
+                except Exception as e:
+                    fprint("Upload failed.", "ERROR", Fore.RED)
+                    self.wfile.write(bytes('<style>p{color: red;}</style><p>Upload failed</p>', "utf-8"))
+                    self.wfile.write(bytes(f'<pre><plaintext>{e}', "utf-8"))
+                    fprint(f"Exception: {e}", "INFO", Fore.RED)
+
+                
+            
+            else:
+                response = 500
+                self.send_response(response)
+
+                fprint_s('HDR', response, response)
+
+                self.end_headers()
+                self.wfile.write(
+                    bytes(
+                        f'<html><body><h4>{self.path}<h4><p>Exception occurred during processing of request from {self.client_address}</p><p>{exception_curr}</p></body></html>',
+                        "utf-8"))
+
+                fprint(f'Exception occurred during processing of request from {self.client_address}', 'ERROR', Fore.RED)
 
         if self.path.endswith("/db"):
             self.wfile.write(bytes(file_to_open, 'utf-8'))
@@ -647,23 +667,6 @@ class LoopbackServer(BaseHTTPRequestHandler):
         fprint("Server timed out.", "ERROR", Fore.RED)
     print('\n')
 
-
-def run_http():
-    webServer: HTTPServer = HTTPServer((hostName, serverPort), LoopbackServer)
-    webServer.serve_forever()
-def run_ftp():
-    checker = InMemoryUsernamePasswordDatabaseDontUse()
-    checker.addUser("admin", "ls@256$")
-
-    portal = Portal(FTPRealm("./public"), [AllowAnonymousAccess()])
-
-    factory = FTPFactory(portal)
-
-    reactor.run()
-
-
-
-
 if __name__ == "__main__":
 
     fprint('', '', Back.RESET)
@@ -683,7 +686,7 @@ if __name__ == "__main__":
         bar(i + 1, l, prefix='Loading:           ', suffix='Complete', length=25, data=True)
 
     IH: int = 0
-    stats = ["i7_1185G7/C0_C1_C2_C3", "i7-1185G7/C4_C5_C6_C7", "NVMe0                ", "RAM0                ", "CS0                ", "Done                "]
+    stats = ["CPU_Any_Cores/2 [0]", "CPU_Any_Cores/2 [1]", "NVMe0                ", "RAM0                ", "CS0                ", "Done                "]
     statsI3 = ["i3_7350K/C0", "i3_7350K/C1", "NVMe0            ", "RAM0            ", "CS0            ", "Done            "]
 
     bar(0, l, prefix='Hardware Processes:', suffix=stats[0], length=25)
@@ -715,11 +718,12 @@ if __name__ == "__main__":
     fprint(f"Server started ftp://{hostName}:{21} @ {ip_addr}", 'SERVER', Fore.CYAN)
     fprint(f"Server started http://{RLHostName}:{serverPort} @ {RLHostIPBaseAddr}", 'SERVER', Fore.CYAN)
     fprint(f'Listening on port {serverPort} ...', 'INFO', Fore.GREEN)
+    try:
+        webServer: HTTPServer = HTTPServer((hostName, serverPort), LoopbackServer)
+        webServer.serve_forever()
+    except:
+        pass
 
-    p1 = multiprocessing.Process(name='p1', target=run_http)
-    p = multiprocessing.Process(name='p', target=run_ftp)
-    p1.start()
-    p.start()
     webServer.server_close()
     sleep(0)
     print("Server stopped.")

@@ -18,6 +18,14 @@ body{
         #000000,
         #000000,
         #000000,
+        #000000,
+        #000000,
+        #000000,
+        #000000,
+        #000000,
+        #000000,
+        #000000,
+        #000000,
         #222222,
         #444444,
         #666666,
@@ -30,10 +38,18 @@ body{
         #ffffff,
         #ffffff,
         #ffffff,
+        #ffffff,
+        #ffffff,
+        #ffffff,
+        #ffffff,
+        #ffffff,
+        #ffffff,
+        #ffffff,
+        #ffffff,
         #ffffff
     );
-    background-size: 300% 300%;
-    animation: color 10s ease-in-out infinite;
+    background-size: 52100% 52100%;
+    animation: color 12s ease-in-out infinite;
     
 }
 @keyframes color {

@@ -15,15 +15,12 @@ import psutil
 
 import customtkinter
 
-
-
 customtkinter.set_appearance_mode("dark")  # Modes: "System" (standard), "Dark", "Light"
 customtkinter.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
 
 app = customtkinter.CTk()
 app.geometry("600x880")
 app.title("LoopbackServerA1 Config")
-
 
 
 def start_serv():
@@ -41,8 +38,6 @@ def start_serv():
     app.destroy()
 
 
-
-
 frame_1 = customtkinter.CTkFrame(master=app)
 frame_1.pack(pady=20, padx=60, fill="both", expand=True)
 
@@ -56,11 +51,8 @@ optionmenu_1.set("Protocol")
 switch_3 = customtkinter.CTkSwitch(master=frame_1, text="Time/Data Measurements")
 switch_3.pack(pady=10, padx=10)
 
-
-
 label_2 = customtkinter.CTkLabel(master=frame_1, justify=customtkinter.LEFT, text="IP/LOC", font=("Calibri", 24))
 label_2.pack(pady=10, padx=10)
-
 
 combobox_1 = customtkinter.CTkOptionMenu(frame_1, values=["127.0.0.1", "Pre-Assigned", "Other"])
 combobox_1.pack(pady=10, padx=10)
@@ -91,13 +83,8 @@ text_1 = customtkinter.CTkTextbox(master=frame_1, width=200, height=70)
 text_1.pack(pady=10, padx=10)
 text_1.insert("0.0", "start:none:any\nserver:start.load")
 
-
 checkbox_1 = customtkinter.CTkCheckBox(master=frame_1, text='SDL')
 checkbox_1.pack(pady=10, padx=10)
-
-
-
-
 
 button_1 = customtkinter.CTkButton(master=frame_1, text="START", command=start_serv)
 button_1.pack(pady=10, padx=10)
@@ -220,17 +207,18 @@ def fprint_s(text, aux, stat) -> None:
     print((f'{color}[{aux}] {text}{Fore.WHITE}' if aux != '' else f"{color}{text}{Fore.WHITE}"))
 
 
-
 def connect(ip: str = "127.0.0.1", port: int = 8000) -> list:
     """Connect to IP and Port"""
     connection: list = [ip, port]
     return connection
+
 
 def handle(clientIP: object, serverIP: str = '127.0.0.1', header: object = None, limit: object = None, key: object = None) -> object:
     connection = connect()
     fprint(f"connnected {serverIP}, {clientIP} on {connection}", "HANDLER", Fore.YELLOW)
     fprint(f"Handling request @{clientIP}", "HANDLER", Fore.YELLOW)
     return connection, limit, header
+
 
 # Server
 # @cache
@@ -408,8 +396,8 @@ class LoopbackServer(BaseHTTPRequestHandler):
                 fprint_s('HDR', response, response)
 
                 self.end_headers()
-                 
-                fprint(f"Upload {(self.path.split("="))[1]}", "INFO", Fore.YELLOW)
+
+                fprint(f"Upload {(self.path.split('='))[1]}", "INFO", Fore.YELLOW)
 
                 try:
                     with open("C:/Network/db/public/" + str((self.path.split("="))[1]), "x") as _f:
@@ -423,8 +411,8 @@ class LoopbackServer(BaseHTTPRequestHandler):
                     self.wfile.write(bytes(f'<pre><plaintext>{e}', "utf-8"))
                     fprint(f"Exception: {e}", "INFO", Fore.RED)
 
-                
-            
+
+
             else:
                 response = 500
                 self.send_response(response)
@@ -552,7 +540,6 @@ class LoopbackServer(BaseHTTPRequestHandler):
         self.send_header("Allow", "OPTIONS, GET, HEAD, POST")
         self.end_headers()
 
-
     def do_TRACE(self):
         """TRACE data request"""
 
@@ -648,7 +635,9 @@ class LoopbackServer(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
-        self.wfile.write(bytes('<?xml version="1.0"?><a:multistatus xmlns:b="urn:uuid:c2f41010-65b3-11d1-a29f-00aa00c14882/" xmlns:a="DAV:"><a:response><a:href>https://127.0.0.1:8000/</a:href><a:propstat><a:status>HTTP/1.1 200 OK</a:status><a:prop><a:getcontenttype>text/plain</a:getcontenttype><a:getcontentlength b:dt="int">1870</a:getcontentlength></a:prop></a:propstat></a:response></a:multistatus>', "utf-8"))
+        self.wfile.write(bytes(
+            '<?xml version="1.0"?><a:multistatus xmlns:b="urn:uuid:c2f41010-65b3-11d1-a29f-00aa00c14882/" xmlns:a="DAV:"><a:response><a:href>https://127.0.0.1:8000/</a:href><a:propstat><a:status>HTTP/1.1 200 OK</a:status><a:prop><a:getcontenttype>text/plain</a:getcontenttype><a:getcontentlength b:dt="int">1870</a:getcontentlength></a:prop></a:propstat></a:response></a:multistatus>',
+            "utf-8"))
         print(self.responses)
 
     end_time = perf_counter_ns()
@@ -666,6 +655,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
     if total_time > 30000:
         fprint("Server timed out.", "ERROR", Fore.RED)
     print('\n')
+
 
 if __name__ == "__main__":
 

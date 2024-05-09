@@ -1,13 +1,18 @@
 import http.client
 import sys
 
-http_server = sys.argv[1]
-port = sys.argv[2]
+http_server = input("IP: ")
+port = input("Port: ")
+id_name = input("UID: ")
 # create a connection
 conn = http.client.HTTPConnection(http_server, port)
-
+conn.request("SeperateInterfaceID", id_name)
+rsp = conn.getresponse()
+print(rsp.status, rsp.reason)
+data_received = (rsp.read()).decode("utf-8")
+print(data_received)
 while 1:
-    cmd = input('srvr> ')
+    cmd = input('cmd> ')
     cmd = cmd.split()
 
     if cmd[0] == '-e':  # type exit to end clientside
@@ -25,9 +30,10 @@ while 1:
     # get response from server
     rsp = conn.getresponse()
 
+
     # print server response and data
     print(rsp.status, rsp.reason)
-    data_received = rsp.read()
+    data_received = (rsp.read()).decode("utf-8")
     print(data_received)
 
 conn.close()

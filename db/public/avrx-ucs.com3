@@ -1,0 +1,29 @@
+sys:{                     
+	NVM Express Controller
+	VHD loopback controller
+	Microsoft Hyper-V PCI Server
+	Microsoft Hyper-V Virtual Disk Server
+	Microsoft Hyper-V Virtual Machine Bus Provider
+	Microsoft Hyper-V Virtualization Infrastructure Driver
+	Microsoft System Management BIOS Driver
+}
+
+com3:{
+	list caheList
+	list dynamic
+	list recordCache
+	list information
+	list server
+	list serverDetails 
+} 
+
+headerFlag:{
+	QR [1]
+	OPCODE [4]
+	AA
+	TC
+	RD
+	RA
+	Z [3]
+	RCODE [4]
+}

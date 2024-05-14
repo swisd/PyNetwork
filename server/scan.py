@@ -1,6 +1,6 @@
 import os
 
-db = os.getcwd() + '/db/'
+db = 'C:/Network/db/'
 count = 0
 _fil = open('C:/Network/server/scan/db_scanned.html', 'w')
 

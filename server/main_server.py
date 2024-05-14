@@ -1,6 +1,6 @@
 # Python 3 loopback server 
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from time import sleep, perf_counter_ns, strftime, localtime, time
+from time import sleep, perf_counter_ns, strftime, localtime, time, perf_counter
 import psutil
 from socket import gethostname, gethostbyname
 import http.cookies
@@ -133,12 +133,23 @@ def connect(ip: str = "127.0.0.1", port: int = 8000) -> list:
     return connection
 
 
+def handle(clientIP: object, serverIP: str = '127.0.0.1', header: object = None, limit: object = None, key: object = None) -> object:
+    connection = connect()
+    fprint(f"connnected {serverIP}, {clientIP} on {connection}", "HANDLER", Fore.YELLOW)
+    fprint(f"Handling request @{clientIP}", "HANDLER", Fore.YELLOW)
+    return connection, limit, header
+
+
 # Server
 # @cache
 @timedata
 class LoopbackServer(BaseHTTPRequestHandler):
     """Loopback Server"""
-    global file_to_open, verifiedADDR, req_s
+
+    recv0 = psutil.net_io_counters().bytes_recv
+    sent0 = psutil.net_io_counters().bytes_sent
+    start_time = perf_counter_ns()
+    global file_to_open, verifiedADDR, req_s, st_ti
 
     def do_GET(self):
         """GET data request"""
@@ -148,6 +159,8 @@ class LoopbackServer(BaseHTTPRequestHandler):
         # GET cmd
 
         response = 200
+
+        handle(self.client_address[0])
 
         fprint(f"GET request {self.path}", 'SERVER', Fore.CYAN)
 
@@ -160,7 +173,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
                 i_rs += 1
                 if i_rs == (len(CLI_REQs)):
                     CLI_REQs.append([self.client_address[0], 1])
-                    print(f"REQl {CLI_REQs[idx]} +")
+                    fprint(f"REQl {CLI_REQs[idx]} +", "APS", Fore.GREEN)
                     break
 
                 with open("iplog.txt", "w") as Log:
@@ -168,15 +181,15 @@ class LoopbackServer(BaseHTTPRequestHandler):
                     Log.close()
 
             else:
-                print('h', end=' ')
                 if CLI_REQs[idx][0] == self.client_address[0]:
                     reqs += 1
                     CLI_REQs[idx][1] = reqs
-                    print(f"REQl {CLI_REQs[idx]} A")
+                    fprint(f"REQl {CLI_REQs[idx]} A", "APS", Fore.GREEN)
                     if CLI_REQs[idx][1] >= R_LIMIT:
                         response = 429
                         fprint(f"Service denied to {self.client_address[0]} due to possible DDoS Attack", "WARNING", Fore.LIGHTRED_EX)
                         DDoSAttackPreventionBanIPList.append(self.client_address[0])
+                        break
 
         self.send_response(response)
 
@@ -233,7 +246,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
 
             self.path = '/server/database_verification.html'
 
-        if not '?' in self.path and not self.path == '/favicon.ico':
+        if not ('?' in self.path and "nwfile=" in self.path) and not self.path == '/favicon.ico':
             try:
                 if '/db' in self.path:
                     fprint(
@@ -294,18 +307,44 @@ class LoopbackServer(BaseHTTPRequestHandler):
             self.end_headers()
 
         elif '?' in self.path and not self.path == '/favicon.ico':
-            response = 500
-            self.send_response(response)
 
-            fprint_s('HDR', response, response)
+            if "_script.py?nwfile=" in self.path:
+                response = 200
+                self.send_response(response)
+                self.send_header("Content-type", "text/html")
+                fprint_s('HDR', response, response)
 
-            self.end_headers()
-            self.wfile.write(
-                bytes(
-                    f'<html><body><h4>{self.path}<h4><p>Exception occurred during processing of request from {self.client_address}</p><p>{0}</p></body></html>',
-                    "utf-8"))
+                self.end_headers()
 
-            fprint(f'Exception occurred during processing of request from {self.client_address}', 'ERROR', Fore.RED)
+                fprint(f"Upload {(self.path.split('='))[1]}", "INFO", Fore.YELLOW)
+
+                try:
+                    with open("C:/Network/db/public/" + str((self.path.split("="))[1]), "x") as _f:
+                        _f.write("")
+                        _f.close()
+                        fprint("Upload success.", "INFO", Fore.GREEN)
+                        self.wfile.write(bytes("<style>p{color: green;}</style><p>Upload success</p>", "utf-8"))
+                except Exception as e:
+                    fprint("Upload failed.", "ERROR", Fore.RED)
+                    self.wfile.write(bytes('<style>p{color: red;}</style><p>Upload failed</p>', "utf-8"))
+                    self.wfile.write(bytes(f'<pre><plaintext>{e}', "utf-8"))
+                    fprint(f"Exception: {e}", "INFO", Fore.RED)
+
+
+
+            else:
+                response = 500
+                self.send_response(response)
+
+                fprint_s('HDR', response, response)
+
+                self.end_headers()
+                self.wfile.write(
+                    bytes(
+                        f'<html><body><h4>{self.path}<h4><p>Exception occurred during processing of request from {self.client_address}</p><p>{exception_curr}</p></body></html>',
+                        "utf-8"))
+
+                fprint(f'Exception occurred during processing of request from {self.client_address}', 'ERROR', Fore.RED)
 
         if self.path.endswith("/db"):
             self.wfile.write(bytes(file_to_open, 'utf-8'))
@@ -351,7 +390,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
                 new = self.client_address[0]
                 verifiedADDR += f'{new}, '
 
-        # TODO: Fix upload system so that it is usable
+        # todo: Fix upload system so that it is usable
 
         elif self.path.endswith('/upload'):
             pass
@@ -416,11 +455,9 @@ class LoopbackServer(BaseHTTPRequestHandler):
 
         fprint(f"OPTIONS request {self.path}", 'SERVER', Fore.CYAN)
 
-        self.send_response(503)
-        self.send_header("Content-type", "text/html")
+        self.send_response(204)
+        self.send_header("Allow", "OPTIONS, GET, HEAD, POST")
         self.end_headers()
-
-        fprint("Function Unsupported 'OPTIONS'", 'ERROR', Fore.RED)
 
     def do_TRACE(self):
         """TRACE data request"""
@@ -445,10 +482,18 @@ class LoopbackServer(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do__s(self):
+        global st_ti
         """-s data request"""
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
+        cr_ti = perf_counter()
+        to_ti = round(cr_ti - st_ti)
+        server = "A1"
+        switch = "SW1"
+        self.wfile.write(bytes(f"| Server {server} uptime: {to_ti}s | Switch {switch} uptime {to_ti + 1}s |", "utf-8"))
+
+        fprint(f"| Server {server} uptime: {to_ti}s | Switch {switch} uptime {to_ti + 1}s |", "STATS", Fore.GREEN)
 
         fprint('-s request', 'SERVER', Fore.CYAN)
 
@@ -513,6 +558,31 @@ class LoopbackServer(BaseHTTPRequestHandler):
 
         fprint(f"SeperateInterfaceID {self.path} @ {self.client_address[0]}", 'SERVER', Fore.CYAN)
 
+    def do_PROPFIND(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+        self.wfile.write(bytes(
+            '<?xml version="1.0"?><a:multistatus xmlns:b="urn:uuid:c2f41010-65b3-11d1-a29f-00aa00c14882/" xmlns:a="DAV:"><a:response><a:href>https://127.0.0.1:8000/</a:href><a:propstat><a:status>HTTP/1.1 200 OK</a:status><a:prop><a:getcontenttype>text/plain</a:getcontenttype><a:getcontentlength b:dt="int">1870</a:getcontentlength></a:prop></a:propstat></a:response></a:multistatus>',
+            "utf-8"))
+        print(self.responses)
+
+    end_time = perf_counter_ns()
+    total_time = round((end_time - start_time) / 1000000, 3)
+    recv1 = psutil.net_io_counters().bytes_recv
+    sent1 = psutil.net_io_counters().bytes_sent
+    recv = recv1 - recv0
+    sent = sent1 - sent0
+    total = recv + sent
+
+    kb_recv: float = recv / 1024
+    kb_sent: float = sent / 1024
+    kb_total: float = total / 1024
+    fprint(f'{total_time} ms | {kb_recv:.3f}/{kb_sent:.3f}/{kb_total:.3f} KB R/S/T | {psutil.cpu_percent(total_time / 1000)} %CPU', 'INFO', Fore.GREEN)
+    if total_time > 30000:
+        fprint("Server timed out.", "ERROR", Fore.RED)
+    print('\n')
+
 
 if __name__ == "__main__":
 
@@ -533,7 +603,7 @@ if __name__ == "__main__":
         bar(i + 1, l, prefix='Loading:           ', suffix='Complete', length=25, data=True)
 
     IH: int = 0
-    stats = ["i7_1185G7/C0_C1_C2_C3", "i7-1185G7/C4_C5_C6_C7", "NVMe0                ", "RAM0                ", "CS0                ", "Done                "]
+    stats = ["CPU_Any_Cores/2 [0]", "CPU_Any_Cores/2 [1]", "NVMe0                ", "RAM0                ", "CS0                ", "Done                "]
     statsI3 = ["i3_7350K/C0", "i3_7350K/C1", "NVMe0            ", "RAM0            ", "CS0            ", "Done            "]
 
     bar(0, l, prefix='Hardware Processes:', suffix=stats[0], length=25)
@@ -562,12 +632,13 @@ if __name__ == "__main__":
     # noinspection PyTypeChecker
     webServer: HTTPServer = HTTPServer((hostName, serverPort), LoopbackServer)
     fprint(f"Server started http://{hostName}:{serverPort} @ {ip_addr}", 'SERVER', Fore.CYAN)
+    fprint(f"Server started ftp://{hostName}:{21} @ {ip_addr}", 'SERVER', Fore.CYAN)
     fprint(f"Server started http://{RLHostName}:{serverPort} @ {RLHostIPBaseAddr}", 'SERVER', Fore.CYAN)
     fprint(f'Listening on port {serverPort} ...', 'INFO', Fore.GREEN)
-
     try:
+        webServer: HTTPServer = HTTPServer((hostName, serverPort), LoopbackServer)
         webServer.serve_forever()
-    except KeyboardInterrupt:
+    except:
         pass
 
     webServer.server_close()

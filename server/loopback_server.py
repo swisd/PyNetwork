@@ -1,6 +1,6 @@
 """Python 3 loopback server"""
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from time import sleep, perf_counter_ns, strftime, localtime, time
+from time import sleep, perf_counter_ns, strftime, localtime, time, perf_counter
 from socket import gethostname, gethostbyname
 import http.cookies
 import random
@@ -12,7 +12,6 @@ from progressbar_ import bar
 from colorama import Fore, Back
 from tqdm import tqdm
 import psutil
-
 import customtkinter
 
 customtkinter.set_appearance_mode("dark")  # Modes: "System" (standard), "Dark", "Light"
@@ -223,6 +222,8 @@ def handle(clientIP: object, serverIP: str = '127.0.0.1', header: object = None,
 # Server
 # @cache
 
+st_ti = perf_counter()
+
 
 class LoopbackServer(BaseHTTPRequestHandler):
     """Loopback Server"""
@@ -230,7 +231,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
     recv0 = psutil.net_io_counters().bytes_recv
     sent0 = psutil.net_io_counters().bytes_sent
     start_time = perf_counter_ns()
-    global file_to_open, verifiedADDR, req_s
+    global file_to_open, verifiedADDR, req_s, st_ti
 
     def do_GET(self):
         """GET data request"""
@@ -446,7 +447,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
             fprint(f'WRITE/STR C:/Network/{self.path} TO CLI @ {self.client_address}', 'SERVER', Fore.CYAN)
 
         elif '/server/' in self.path and not ((('/server/index.html' in self.path) or ('/server/database_verification.html' in self.path)) or (
-                '/server/database.html' in self.path) or self.path == '/server/scan/db_scanned.html' or self.path == '/server/scan/main_scanned.html' or self.path == '/server/server_side_interface.html' or self.path == '/server/download.html' or self.path == '/server/upload.html'):
+                '/server/database.html' in self.path) or self.path == '/server/scan/db_scanned.html' or self.path == '/server/scan/main_scanned.html' or self.path == '/server/server_side_interface.html' or self.path == '/server/download.html' or self.path == '/server/upload.html' or self.path == "/server/privacy_policy.html"):
             self.wfile.write(bytes('<head><style>body{margin:4px;font-family:"OCR A";}</style></head><body><plaintext>%s' % str(file_to_open), 'utf-8'))
 
             fprint(f'WRITE/STR C:/Network/{self.path} TO CLI @ {self.client_address}', 'SERVER', Fore.CYAN)
@@ -563,10 +564,18 @@ class LoopbackServer(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do__s(self):
+        global st_ti
         """-s data request"""
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
+        cr_ti = perf_counter()
+        to_ti = round(cr_ti - st_ti)
+        server = "A1"
+        switch = "SW1"
+        self.wfile.write(bytes(f"| Server {server} uptime: {to_ti}s | Switch {switch} uptime {to_ti + 1}s |", "utf-8"))
+
+        fprint(f"| Server {server} uptime: {to_ti}s | Switch {switch} uptime {to_ti + 1}s |", "STATS", Fore.GREEN)
 
         fprint('-s request', 'SERVER', Fore.CYAN)
 

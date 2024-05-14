@@ -12,7 +12,7 @@ print(rsp.status, rsp.reason)
 data_received = (rsp.read()).decode("utf-8")
 print(data_received)
 while 1:
-    cmd = input('cmd> ')
+    cmd = input('\ncmd> ')
     cmd = cmd.split()
 
     if cmd[0] == '-e':  # type exit to end clientside
@@ -26,14 +26,23 @@ while 1:
         cmd[1] = '/'
 
     conn.request(cmd[0], cmd[1])
+    print("Request sent.\n")
 
     # get response from server
-    rsp = conn.getresponse()
+    try:
+        rsp = conn.getresponse()
+    except:
+        print("Server did not respond")
+        continue
 
 
     # print server response and data
     print(rsp.status, rsp.reason)
     data_received = (rsp.read()).decode("utf-8")
-    print(data_received)
+    if not data_received.endswith("File not found"):
+        print(data_received)
+    else:
+        print("File not found for this path. ERR:404")
 
 conn.close()
+print("Connection closed.")

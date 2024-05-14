@@ -14,7 +14,7 @@ handler(PyObject *self, PyObject *args)
     sts = system(command);
 
     if (sts < 0) {
-        PyErr_SetString(HandleError, "Sysstem command failed");
+        PyErr_SetString(HandleError, "System command failed");
         return NULL;
     }
 

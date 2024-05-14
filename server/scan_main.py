@@ -1,6 +1,6 @@
 import os
 
-db = "C:/Network"
+db = "C:/Network/"
 count = 0
 _fil = open("C:/Network/server/scan/main_scanned.html", 'w')
 

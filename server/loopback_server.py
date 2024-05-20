@@ -9,10 +9,13 @@ import cgi
 from functools import cache
 from loopback_ssi import DataManagement
 from progressbar_ import bar
-from colorama import Fore, Back
+from printmods import Fore, fprint_s, fprint, Back
 from tqdm import tqdm
 import psutil
 import customtkinter
+import math
+import os
+import sys
 
 customtkinter.set_appearance_mode("dark")  # Modes: "System" (standard), "Dark", "Light"
 customtkinter.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
@@ -118,7 +121,8 @@ MODS: list = [
     "-v",
     "-t",
     "-m",
-    "-r"
+    "-r",
+    "-rst"
 ]
 TT_IDENTIFIER: str = "IDENTIFIER"
 MOD_KEYWORDS: list = [
@@ -183,27 +187,6 @@ def timedata(func):
 
 
 # Functions
-
-@cache
-def fprint(text: object, aux: object, col: object) -> None:
-    """Print using color
-    :param text
-    :param aux
-    :param col"""
-    print((f'{col}[{aux}] {text}{Fore.WHITE}' if aux != '' else f"{col}{text}{Fore.WHITE}"))
-
-
-@cache
-def fprint_s(text, aux, stat) -> None:
-    """Print using status"""
-    if 100 <= stat <= 299:
-        color = Fore.GREEN
-    elif 300 <= stat <= 399:
-        color = Fore.YELLOW
-    elif 400 <= stat <= 599:
-        color = Fore.RED
-
-    print((f'{color}[{aux}] {text}{Fore.WHITE}' if aux != '' else f"{color}{text}{Fore.WHITE}"))
 
 
 def connect(ip: str = "127.0.0.1", port: int = 8000) -> list:
@@ -573,9 +556,13 @@ class LoopbackServer(BaseHTTPRequestHandler):
         to_ti = round(cr_ti - st_ti)
         server = "A1"
         switch = "SW1"
-        self.wfile.write(bytes(f"| Server {server} uptime: {to_ti}s | Switch {switch} uptime {to_ti + 1}s |", "utf-8"))
+        self.wfile.write(bytes(
+            f"| Server {server} uptime: {to_ti}s ({math.floor((to_ti / 3600) / 24) % 365}D {math.floor(to_ti / 3600) % 24}H {math.floor(to_ti / 60) % 60}M {to_ti % 60}S)| Switch {switch} uptime {to_ti + 1}s ({math.floor(((to_ti + 1) / 3600) / 24) % 365}D {math.floor((to_ti + 1) / 3600) % 24}H {math.floor((to_ti + 1) / 60) % 60}M {(to_ti + 1) % 60}S)|",
+            "utf-8"))
 
-        fprint(f"| Server {server} uptime: {to_ti}s | Switch {switch} uptime {to_ti + 1}s |", "STATS", Fore.GREEN)
+        fprint(
+            f"| Server {server} uptime: {to_ti}s ({math.floor((to_ti / 3600) / 24) % 365}D {math.floor(to_ti / 3600) % 24}H {math.floor(to_ti / 60) % 60}M {to_ti % 60}S)| Switch {switch} uptime {to_ti + 1}s ({math.floor(((to_ti + 1) / 3600) / 24) % 365}D {math.floor((to_ti + 1) / 3600) % 24}H {math.floor((to_ti + 1) / 60) % 60}M {(to_ti + 1) % 60}S)|",
+            "STATS", Fore.GREEN)
 
         fprint('-s request', 'SERVER', Fore.CYAN)
 
@@ -586,6 +573,9 @@ class LoopbackServer(BaseHTTPRequestHandler):
         self.end_headers()
 
         fprint('-d request', 'SERVER', Fore.CYAN)
+
+        if self.path.startswith('allocate=point'):
+            self.wfile.write(bytes(f"Allocated point [{(((self.path.split('.'))[1]).split(':'))[0]}] to Type [{(((self.path.split('.'))[1]).split(':'))[1]}]", "utf-8"))
 
     def do__v(self):
         """-v data request"""
@@ -620,6 +610,35 @@ class LoopbackServer(BaseHTTPRequestHandler):
         self.end_headers()
 
         fprint('-r request', 'SERVER', Fore.CYAN)
+
+    def do__h(self):
+        """-h data request"""
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+
+        fprint('-h request (HELP)', 'SERVER', Fore.CYAN)
+
+        if self.path == "ck":
+            fprint("A1/SW1 CWDs", "OTHER", Fore.YELLOW)
+            self.wfile.write(bytes(
+                "Commands:\n\t-s\t\tserver timedata\t\t-s [Any]\n\t-d\t\tdata operation\t\t-d [operation] [values]\n\t-v\t\tvariable operation\t-v [variable] [operation]\n"
+                "\t-t\t\tNone\t\t\tNone\n\t-m\t\tmaintenance\t\tNone\n\t-r\t\tdirect request\t\tNone\n\t", "utf-8"))
+
+        else:
+            self.wfile.write(bytes("Help:\n\tCommands\t-h ck\n\tGeneral\t\t-h gen\n\tOther\t\t-h ot", "utf-8"))
+
+    def do__rst(self):
+        for i in range(len(seperateIntefaceIP)):
+            if str(seperateIntefaceIP[i-1]).lower() == 'admin':
+                os.execv(sys.executable, ['python'] + sys.argv)
+                fprint("Restarting Server", "SERVER", Fore.RED)
+                break
+
+        self.send_response(401)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+        self.wfile.write(bytes("Access denied", "utf-8"))
 
     def do_signon(self):
         """signon data request"""
@@ -685,8 +704,8 @@ if __name__ == "__main__":
         bar(i + 1, l, prefix='Loading:           ', suffix='Complete', length=25, data=True)
 
     IH: int = 0
-    stats = ["CPU_Any_Cores/2 [0]", "CPU_Any_Cores/2 [1]", "NVMe0                ", "RAM0                ", "CS0                ", "Done                "]
-    statsI3 = ["i3_7350K/C0", "i3_7350K/C1", "NVMe0            ", "RAM0            ", "CS0            ", "Done            "]
+    stats = ["CPU_Any_Cores/2/0.hdwr", "CPU_Any_Cores/2/1.hdwr", "NVMe0.hdwr            ", "RAM0.hdwr           ", "CS0.hdwr            ", "Done                "]
+    statsI3 = ["i3_7350K/C0.hdwr", "i3_7350K/C1.hdwr", "NVMe0.hdwr        ", "RAM0.hdwr        ", "CS0.hdwr        ", "Done            "]
 
     bar(0, l, prefix='Hardware Processes:', suffix=stats[0], length=25)
     for i, item in enumerate(items):

@@ -6,7 +6,7 @@ from twisted.protocols.ftp import FTPFactory, FTPRealm
 checker = InMemoryUsernamePasswordDatabaseDontUse()
 checker.addUser("admin", "ls@256$")
 
-portal = Portal(FTPRealm("C:/Network/db/public"), [AllowAnonymousAccess()])
+portal = Portal(FTPRealm("C:/Network/"), [AllowAnonymousAccess()])
 
 factory = FTPFactory(portal)
 

@@ -1,28 +1,112 @@
-# Python 3 loopback server 
+# Python 3 loopback server
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from time import sleep, perf_counter_ns, strftime, localtime, time, perf_counter
-import psutil
 from socket import gethostname, gethostbyname
 import http.cookies
 import random
+# 'cgi' is deprecated and slated for removal in python 3.13
 import cgi
-from colorama import Fore, Back
 from functools import cache
-from deprecated import deprecated
 from loopback_ssi import DataManagement
 from progressbar_ import bar
+from printmods import Fore, fprint_s, fprint, Back
 from tqdm import tqdm
+import psutil
+import customtkinter
+import math
+import os
+import sys
+
+
+
+customtkinter.set_appearance_mode("dark")  # Modes: "System" (standard), "Dark", "Light"
+customtkinter.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
+
+app = customtkinter.CTk()
+app.geometry("600x880")
+app.title("LoopbackServerA1 Config")
+
+
+def start_serv():
+    print(f"Protocol: {optionmenu_1.get()}")
+    protocol = optionmenu_1.get()
+    print(f"TDM: {switch_3.get()}")
+    TDM = switch_3.get()
+    print(f"IP Addr: {combobox_1.get()}")
+    print(f"HTTP Port: {combobox_6.get()}")
+    print(f"FTP Port: {combobox_7.get()}")
+    print(f"IP Log: {switch_1.get()}")
+    print(f"Errors: {switch_2.get()}")
+    print(f"IPCs: {switch_4.get()}")
+    print(f"SDL: {checkbox_1.get()}")
+    app.destroy()
+
+
+frame_1 = customtkinter.CTkFrame(master=app)
+frame_1.pack(pady=20, padx=60, fill="both", expand=True)
+
+label_1 = customtkinter.CTkLabel(master=frame_1, justify=customtkinter.LEFT, text='General Settings', font=("Calibri", 24))
+label_1.pack(pady=10, padx=10)
+
+optionmenu_1 = customtkinter.CTkOptionMenu(frame_1, values=["HTTP/FTP", "HTTP", "FTP"])
+optionmenu_1.pack(pady=10, padx=10)
+optionmenu_1.set("Protocol")
+
+switch_3 = customtkinter.CTkSwitch(master=frame_1, text="Time/Data Measurements")
+switch_3.pack(pady=10, padx=10)
+
+label_2 = customtkinter.CTkLabel(master=frame_1, justify=customtkinter.LEFT, text="IP/LOC", font=("Calibri", 24))
+label_2.pack(pady=10, padx=10)
+
+combobox_1 = customtkinter.CTkOptionMenu(frame_1, values=["127.0.0.1", "Pre-Assigned", "Other"])
+combobox_1.pack(pady=10, padx=10)
+combobox_1.set("Default IP")
+combobox_6 = customtkinter.CTkOptionMenu(frame_1, values=["8000", "Pre-Assigned", "Other"])
+combobox_6.pack(pady=10, padx=10)
+combobox_6.set("HTTP Port")
+combobox_7 = customtkinter.CTkOptionMenu(frame_1, values=["21", "Pre-Assigned", "Other"])
+combobox_7.pack(pady=10, padx=10)
+combobox_7.set("FTP Port")
+
+switch_1 = customtkinter.CTkSwitch(master=frame_1, text='IP Logging')
+switch_1.pack(pady=10, padx=10)
+
+label_3 = customtkinter.CTkLabel(master=frame_1, justify=customtkinter.LEFT, font=("Calibri", 24), text="Console")
+label_3.pack(pady=10, padx=10)
+
+switch_2 = customtkinter.CTkSwitch(master=frame_1, text="Display Errors")
+switch_2.pack(pady=10, padx=10)
+
+switch_4 = customtkinter.CTkSwitch(master=frame_1, text="Display IPCs")
+switch_4.pack(pady=10, padx=10)
+
+label_5 = customtkinter.CTkLabel(master=frame_1, justify=customtkinter.LEFT, font=("Calibri", 24), text="Start Params")
+label_5.pack(pady=10, padx=10)
+
+text_1 = customtkinter.CTkTextbox(master=frame_1, width=200, height=70)
+text_1.pack(pady=10, padx=10)
+text_1.insert("0.0", "start:none:any\nserver:start.load")
+
+checkbox_1 = customtkinter.CTkCheckBox(master=frame_1, text='SDL')
+checkbox_1.pack(pady=10, padx=10)
+
+button_1 = customtkinter.CTkButton(master=frame_1, text="START", command=start_serv)
+button_1.pack(pady=10, padx=10)
+
+app.mainloop()
+
 
 # Variables
-
-req_s = 0
-reql = []
-clients = []
-idx = 0
-for file in ("C:/Network/f/"):
+exception_curr: str = ''
+req_s: int = 0
+reql: list = []
+clients: list = []
+idx: int = 0
+for file in "C:/Network/f/":
     idx += 1
-file_to_open = ''
-verifiedADDR: str = '127.0.0.1, 10.1.110.125'
+file_to_open: str = ''
+verifiedADDR: str = '127.0.0.1, '
+serverVerifiedAddr: str = '127.0.0.1'
 hostName = gethostname()
 ip_addr = gethostbyname(hostName)
 RLHostName: str = gethostname()
@@ -31,7 +115,6 @@ serverPort = 8000
 chc = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"]
 response = 200
 R_LIMIT: int = 10000
-serverVerifiedAddr: str = "127.0.0.1"
 seperateIntefaceIP: list = []
 DDoSAttackPreventionBanIPList: list = []
 CLI_REQs: list[list] = [["0.0.0.0", 0]]
@@ -53,10 +136,12 @@ MOD_KEYWORDS: list = [
     "request"
 ]
 KEYWORDS: list = []
+Logging: bool = True
 
 class Auxillary(DataManagement):
     def send(self, data):
         pass
+
 
 # Decorators
 def timedata(func):
@@ -104,29 +189,7 @@ def timedata(func):
 
 # Functions
 
-@cache
-def fprint(text, aux, col) -> None:
-    """Print using color
-    :param text
-    :param aux
-    :param col"""
-    print((f'{col}[{aux}] {text}{Fore.WHITE}' if aux != '' else f"{col}{text}{Fore.WHITE}"))
 
-
-@cache
-def fprint_s(text, aux, stat) -> None:
-    """Print using status"""
-    if 100 <= stat <= 299:
-        color = Fore.GREEN
-    elif 300 <= stat <= 399:
-        color = Fore.YELLOW
-    elif 400 <= stat <= 599:
-        color = Fore.RED
-
-    print((f'{color}[{aux}] {text}{Fore.WHITE}' if aux != '' else f"{color}{text}{Fore.WHITE}"))
-
-
-@deprecated
 def connect(ip: str = "127.0.0.1", port: int = 8000) -> list:
     """Connect to IP and Port"""
     connection: list = [ip, port]
@@ -142,7 +205,10 @@ def handle(clientIP: object, serverIP: str = '127.0.0.1', header: object = None,
 
 # Server
 # @cache
-@timedata
+
+st_ti = perf_counter()
+
+
 class LoopbackServer(BaseHTTPRequestHandler):
     """Loopback Server"""
 
@@ -365,7 +431,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
             fprint(f'WRITE/STR C:/Network/{self.path} TO CLI @ {self.client_address}', 'SERVER', Fore.CYAN)
 
         elif '/server/' in self.path and not ((('/server/index.html' in self.path) or ('/server/database_verification.html' in self.path)) or (
-                '/server/database.html' in self.path) or self.path == '/server/scan/db_scanned.html' or self.path == '/server/scan/main_scanned.html' or self.path == '/server/server_side_interface.html' or self.path == '/server/download.html' or self.path == '/server/upload.html'):
+                '/server/database.html' in self.path) or self.path == '/server/scan/db_scanned.html' or self.path == '/server/scan/main_scanned.html' or self.path == '/server/server_side_interface.html' or self.path == '/server/download.html' or self.path == '/server/upload.html' or self.path == "/server/privacy_policy.html"):
             self.wfile.write(bytes('<head><style>body{margin:4px;font-family:"OCR A";}</style></head><body><plaintext>%s' % str(file_to_open), 'utf-8'))
 
             fprint(f'WRITE/STR C:/Network/{self.path} TO CLI @ {self.client_address}', 'SERVER', Fore.CYAN)
@@ -491,9 +557,13 @@ class LoopbackServer(BaseHTTPRequestHandler):
         to_ti = round(cr_ti - st_ti)
         server = "A1"
         switch = "SW1"
-        self.wfile.write(bytes(f"| Server {server} uptime: {to_ti}s | Switch {switch} uptime {to_ti + 1}s |", "utf-8"))
+        self.wfile.write(bytes(
+            f"| Server {server} uptime: {to_ti}s ({math.floor((to_ti / 3600) / 24) % 365}D {math.floor(to_ti / 3600) % 24}H {math.floor(to_ti / 60) % 60}M {to_ti % 60}S)| Switch {switch} uptime {to_ti + 1}s ({math.floor(((to_ti + 1) / 3600) / 24) % 365}D {math.floor((to_ti + 1) / 3600) % 24}H {math.floor((to_ti + 1) / 60) % 60}M {(to_ti + 1) % 60}S)|",
+            "utf-8"))
 
-        fprint(f"| Server {server} uptime: {to_ti}s | Switch {switch} uptime {to_ti + 1}s |", "STATS", Fore.GREEN)
+        fprint(
+            f"| Server {server} uptime: {to_ti}s ({math.floor((to_ti / 3600) / 24) % 365}D {math.floor(to_ti / 3600) % 24}H {math.floor(to_ti / 60) % 60}M {to_ti % 60}S)| Switch {switch} uptime {to_ti + 1}s ({math.floor(((to_ti + 1) / 3600) / 24) % 365}D {math.floor((to_ti + 1) / 3600) % 24}H {math.floor((to_ti + 1) / 60) % 60}M {(to_ti + 1) % 60}S)|",
+            "STATS", Fore.GREEN)
 
         fprint('-s request', 'SERVER', Fore.CYAN)
 
@@ -504,6 +574,9 @@ class LoopbackServer(BaseHTTPRequestHandler):
         self.end_headers()
 
         fprint('-d request', 'SERVER', Fore.CYAN)
+
+        if self.path.startswith('allocate=point'):
+            self.wfile.write(bytes(f"Allocated point [{(((self.path.split('.'))[1]).split(':'))[0]}] to Type [{(((self.path.split('.'))[1]).split(':'))[1]}]", "utf-8"))
 
     def do__v(self):
         """-v data request"""
@@ -538,6 +611,35 @@ class LoopbackServer(BaseHTTPRequestHandler):
         self.end_headers()
 
         fprint('-r request', 'SERVER', Fore.CYAN)
+
+    def do__h(self):
+        """-h data request"""
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+
+        fprint('-h request (HELP)', 'SERVER', Fore.CYAN)
+
+        if self.path == "ck":
+            fprint("A1/SW1 CWDs", "OTHER", Fore.YELLOW)
+            self.wfile.write(bytes(
+                "Commands:\n\t-s\t\tserver timedata\t\t-s [Any]\n\t-d\t\tdata operation\t\t-d [operation] [values]\n\t-v\t\tvariable operation\t-v [variable] [operation]\n"
+                "\t-t\t\tNone\t\t\tNone\n\t-m\t\tmaintenance\t\tNone\n\t-r\t\tdirect request\t\tNone\n\t", "utf-8"))
+
+        else:
+            self.wfile.write(bytes("Help:\n\tCommands\t-h ck\n\tGeneral\t\t-h gen\n\tOther\t\t-h ot", "utf-8"))
+
+    def do__rst(self):
+        for i in range(len(seperateIntefaceIP)):
+            if str(seperateIntefaceIP[i-1]).lower() == 'admin':
+                os.execv(sys.executable, ['python'] + sys.argv)
+                fprint("Restarting Server", "SERVER", Fore.RED)
+                break
+
+        self.send_response(401)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+        self.wfile.write(bytes("Access denied", "utf-8"))
 
     def do_signon(self):
         """signon data request"""

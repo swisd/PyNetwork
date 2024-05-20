@@ -1,4 +1,5 @@
 import http.client
+import random
 import sys
 import os
 from colorama import *
@@ -11,7 +12,7 @@ http_server = '127.0.0.1'
 conn = http.client.HTTPConnection(http_server, 8000)
 
 downloadsDir = "C:/Network/downloads/"
-
+idt = random.randrange(0, 99999)
 
 def fprint(text, aux, col):
     print((f'{col}[{aux}] {text}{Fore.WHITE}' if aux != '' else f"{col}{text}{Fore.WHITE}"))
@@ -28,7 +29,7 @@ def fprint_s(text, aux, stat):
     print((f'{col}[{aux}] {text}{Fore.WHITE}' if aux != '' else f"{col}{text}{Fore.WHITE}"))
 
 
-conn.request("SeperateInterfaceID", "RemoteClient")
+conn.request("SeperateInterfaceID", f"RemoteClient{idt}")
 rsp = conn.getresponse()
 
 while 1:

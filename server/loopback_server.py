@@ -4,18 +4,19 @@ from time import sleep, perf_counter_ns, strftime, localtime, time, perf_counter
 from socket import gethostname, gethostbyname
 import http.cookies
 import random
+import math
+import os
+import sys
 # 'cgi' is deprecated and slated for removal in python 3.13
 import cgi
-from functools import cache
 from loopback_ssi import DataManagement
 from progressbar_ import bar
 from printmods import Fore, fprint_s, fprint, Back
 from tqdm import tqdm
 import psutil
 import customtkinter
-import math
-import os
-import sys
+
+QUICKLOAD: bool = False
 
 customtkinter.set_appearance_mode("dark")  # Modes: "System" (standard), "Dark", "Light"
 customtkinter.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
@@ -26,6 +27,7 @@ app.title("LoopbackServerA1 Config")
 
 
 def start_serv():
+    global QUICKLOAD
     print(f"Protocol: {optionmenu_1.get()}")
     protocol = optionmenu_1.get()
     print(f"TDM: {switch_3.get()}")
@@ -36,7 +38,9 @@ def start_serv():
     print(f"IP Log: {switch_1.get()}")
     print(f"Errors: {switch_2.get()}")
     print(f"IPCs: {switch_4.get()}")
+    print(f"Ql: {switch_5.get()}")
     print(f"SDL: {checkbox_1.get()}")
+    QUICKLOAD = switch_5.getboolean(switch_5.get())
     app.destroy()
 
 
@@ -78,6 +82,9 @@ switch_2.pack(pady=10, padx=10)
 switch_4 = customtkinter.CTkSwitch(master=frame_1, text="Display IPCs")
 switch_4.pack(pady=10, padx=10)
 
+switch_5 = customtkinter.CTkSwitch(master=frame_1, text="QUICKLoad")
+switch_5.pack(pady=10, padx=10)
+
 label_5 = customtkinter.CTkLabel(master=frame_1, justify=customtkinter.LEFT, font=("Calibri", 24), text="Start Params")
 label_5.pack(pady=10, padx=10)
 
@@ -109,7 +116,7 @@ RLHostName: str = gethostname()
 RLHostIPBaseAddr: str = gethostbyname(RLHostName)
 hostName: str = "localhost"
 serverPort: int = 8000
-chc: list = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"]
+chc: list = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"]
 response: int = 200
 R_LIMIT: int = 10000
 seperateIntefaceIP: list = []
@@ -124,7 +131,6 @@ MODS: list = [
     "-r",
     "-rst"
 ]
-TT_IDENTIFIER: str = "IDENTIFIER"
 MOD_KEYWORDS: list = [
     "system",
     "data",
@@ -136,6 +142,13 @@ MOD_KEYWORDS: list = [
 KEYWORDS: list = []
 Logging: bool = True
 
+KEY: str = ''
+ID: str = ''
+for i in range(len(hostName)):
+    ID += str(hex(ord(hostName[i-1]))).removeprefix("0x")
+
+for i in range(20):
+    KEY += random.choice(chc)
 
 class Auxillary(DataManagement):
     def send(self, data):
@@ -214,7 +227,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
     recv0 = psutil.net_io_counters().bytes_recv
     sent0 = psutil.net_io_counters().bytes_sent
     start_time = perf_counter_ns()
-    global file_to_open, verifiedADDR, req_s, st_ti
+    global file_to_open, verifiedADDR, req_s, st_ti, serverVerifiedAddr
 
     def do_GET(self):
         """GET data request"""
@@ -628,6 +641,16 @@ class LoopbackServer(BaseHTTPRequestHandler):
         else:
             self.wfile.write(bytes("Help:\n\tCommands\t-h ck\n\tGeneral\t\t-h gen\n\tOther\t\t-h ot", "utf-8"))
 
+    def do__k(self):
+        global serverVerifiedAddr
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+        if self.path.startswith("access="):
+            if KEY in self.path:
+                serverVerifiedAddr += ip_addr + ", "
+
+
     def do__rst(self):
         for i in range(len(seperateIntefaceIP)):
             if str(seperateIntefaceIP[i-1]).lower() == 'admin':
@@ -653,7 +676,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
         self.send_header("Content-type", "text/html")
 
         for _ in tqdm(range(100), ncols=50):
-            sleep(0.025)
+            sleep(0.0125)
         self.end_headers()
         self.wfile.write(bytes(f"ID {[self.client_address[0], self.path]} Approved", "utf-8"))
 
@@ -667,6 +690,45 @@ class LoopbackServer(BaseHTTPRequestHandler):
             '<?xml version="1.0"?><a:multistatus xmlns:b="urn:uuid:c2f41010-65b3-11d1-a29f-00aa00c14882/" xmlns:a="DAV:"><a:response><a:href>https://127.0.0.1:8000/</a:href><a:propstat><a:status>HTTP/1.1 200 OK</a:status><a:prop><a:getcontenttype>text/plain</a:getcontenttype><a:getcontentlength b:dt="int">1870</a:getcontentlength></a:prop></a:propstat></a:response></a:multistatus>',
             "utf-8"))
         print(self.responses)
+
+    def do__sdata(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+        self.wfile.write(bytes(f"HostName: {hostName}\n"
+                               f"IP Addr.: {ip_addr}\n"
+                               f"Port: {serverPort}\n"
+                               f"ID: {ID}\n"
+                               f"KEY: {'*' * (len(KEY) - 5) + KEY[(len(KEY) - 4):]}\n"
+                               f"Clients: {clients}\n"
+                               f"CLI_REQs: {CLI_REQs}\n"
+                               f"R_LIMIT: {R_LIMIT}\n"
+                               f"VerifiedAddr: {verifiedADDR}\n"
+                               f"REQ_S: {req_s}\n"
+                               f"reql: {reql}\n"
+                               f"SeperateInterfaceIP: {seperateIntefaceIP}\n"
+                               f"Logging: {Logging}\n"
+                               f"EXCPETION_CURR: {exception_curr}\n", "utf-8"))
+        fprint(f"HostName: {hostName}\n"
+               f"IP Addr.: {ip_addr}\n"
+               f"Port: {serverPort}\n"
+               f"ID: {ID}\n"
+               f"KEY: {'*' * (len(KEY) - 5) + KEY[(len(KEY) - 4):]}\n"
+               f"Clients: {clients}\n"
+               f"CLI_REQs: {CLI_REQs}\n"
+               f"R_LIMIT: {R_LIMIT}\n"
+               f"VerifiedAddr: {verifiedADDR}\n"
+               f"REQ_S: {req_s}\n"
+               f"reql: {reql}\n"
+               f"SeperateInterfaceIP: {seperateIntefaceIP}\n"
+               f"Logging: {Logging}\n"
+               f"EXCPETION_CURR: {exception_curr}\n",
+               "", Fore.YELLOW)
+
+    def do__qq(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
 
     end_time = perf_counter_ns()
     total_time = round((end_time - start_time) / 1000000, 3)
@@ -689,17 +751,22 @@ if __name__ == "__main__":
 
     fprint('', '', Back.RESET)
 
+    if QUICKLOAD:
+        txr = 0.0125
+    else:
+        txr = 0.1
+
     fprint("Loopback Testing Server - Isolated Run Only", "INFO", Fore.YELLOW)
 
     fprint("Features of this server are in development and not intended for full use.\nFor more information, visit avrx-ucs.com/py_loopback", "", Fore.YELLOW)
-
+    fprint(f"ID: {ID} // KEY: {KEY}", "SERVER", Fore.RED)
     items = list(range(0, 50))
     l = len(items)
 
     bar(0, l, prefix='Loading:           ', suffix="Complete", length=25, data=True)
     for i, item in enumerate(items):
         # Do stuff...
-        sleep(0.1)
+        sleep(txr)
         # Update Progress Bar
         bar(i + 1, l, prefix='Loading:           ', suffix='Complete', length=25, data=True)
 
@@ -711,7 +778,7 @@ if __name__ == "__main__":
     for i, item in enumerate(items):
         # Do stuff...
         suffix: str = stats[round(IH / 10)]
-        sleep(0.1)
+        sleep(txr)
         # Update Progress Bar
         bar(i + 1, l, prefix='Hardware Processes:', suffix=suffix, length=25)
         IH += 1
@@ -725,12 +792,29 @@ if __name__ == "__main__":
     for i, item in enumerate(items):
         # Do stuff...
         suffix: str = stats[round(IH / 10)]
-        sleep(0.1)
+        sleep(txr)
         # Update Progress Bar
         bar(i + 1, l, prefix='Starting:          ', suffix=suffix, length=25)
         IH += 1
 
     # noinspection PyTypeChecker
+
+    fprint(f"HostName: {hostName}\n"
+           f"IP Addr.: {ip_addr}\n"
+           f"Port: {serverPort}\n"
+           f"ID: {ID}\n"
+           f"KEY: {'*'*(len(KEY)-5) + KEY[(len(KEY)-4):]}\n"
+           f"Clients: {clients}\n"
+           f"CLI_REQs: {CLI_REQs}\n"
+           f"R_LIMIT: {R_LIMIT}\n"
+           f"VerifiedAddr: {verifiedADDR}\n"
+           f"REQ_S: {req_s}\n"
+           f"reql: {reql}\n"
+           f"SeperateInterfaceIP: {seperateIntefaceIP}\n"
+           f"Logging: {Logging}\n"
+           f"EXCPETION_CURR: {exception_curr}\n",
+           "", Fore.YELLOW)
+
     webServer: HTTPServer = HTTPServer((hostName, serverPort), LoopbackServer)
     fprint(f"Server started http://{hostName}:{serverPort} @ {ip_addr}", 'SERVER', Fore.CYAN)
     fprint(f"Server started ftp://{hostName}:{21} @ {ip_addr}", 'SERVER', Fore.CYAN)

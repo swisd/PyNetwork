@@ -650,7 +650,6 @@ class LoopbackServer(BaseHTTPRequestHandler):
             if KEY in self.path:
                 serverVerifiedAddr += ip_addr + ", "
 
-
     def do__rst(self):
         for i in range(len(seperateIntefaceIP)):
             if str(seperateIntefaceIP[i-1]).lower() == 'admin':
@@ -687,7 +686,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
         self.send_header("Content-type", "text/html")
         self.end_headers()
         self.wfile.write(bytes(
-            '<?xml version="1.0"?><a:multistatus xmlns:b="urn:uuid:c2f41010-65b3-11d1-a29f-00aa00c14882/" xmlns:a="DAV:"><a:response><a:href>https://127.0.0.1:8000/</a:href><a:propstat><a:status>HTTP/1.1 200 OK</a:status><a:prop><a:getcontenttype>text/plain</a:getcontenttype><a:getcontentlength b:dt="int">1870</a:getcontentlength></a:prop></a:propstat></a:response></a:multistatus>',
+            "None",
             "utf-8"))
         print(self.responses)
 

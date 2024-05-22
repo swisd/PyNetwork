@@ -26,6 +26,8 @@ share/python-wheels/
 MANIFEST
 dist/
 build/
+.pyz
+.toc
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

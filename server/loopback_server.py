@@ -2,7 +2,7 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from time import sleep, perf_counter_ns, strftime, localtime, time, perf_counter
 from socket import gethostname, gethostbyname
-import http.cookies
+from http import cookies
 import random
 import math
 import os
@@ -43,23 +43,17 @@ def start_serv():
     QUICKLOAD = switch_5.getboolean(switch_5.get())
     app.destroy()
 
-
 frame_1 = customtkinter.CTkFrame(master=app)
 frame_1.pack(pady=20, padx=60, fill="both", expand=True)
-
 label_1 = customtkinter.CTkLabel(master=frame_1, justify=customtkinter.LEFT, text='General Settings', font=("Calibri", 24))
 label_1.pack(pady=10, padx=10)
-
 optionmenu_1 = customtkinter.CTkOptionMenu(frame_1, values=["HTTP/FTP", "HTTP", "FTP"])
 optionmenu_1.pack(pady=10, padx=10)
 optionmenu_1.set("Protocol")
-
 switch_3 = customtkinter.CTkSwitch(master=frame_1, text="Time/Data Measurements")
 switch_3.pack(pady=10, padx=10)
-
 label_2 = customtkinter.CTkLabel(master=frame_1, justify=customtkinter.LEFT, text="IP/LOC", font=("Calibri", 24))
 label_2.pack(pady=10, padx=10)
-
 combobox_1 = customtkinter.CTkOptionMenu(frame_1, values=["127.0.0.1", "Pre-Assigned", "Other"])
 combobox_1.pack(pady=10, padx=10)
 combobox_1.set("Default IP")
@@ -69,32 +63,23 @@ combobox_6.set("HTTP Port")
 combobox_7 = customtkinter.CTkOptionMenu(frame_1, values=["21", "Pre-Assigned", "Other"])
 combobox_7.pack(pady=10, padx=10)
 combobox_7.set("FTP Port")
-
 switch_1 = customtkinter.CTkSwitch(master=frame_1, text='IP Logging')
 switch_1.pack(pady=10, padx=10)
-
 label_3 = customtkinter.CTkLabel(master=frame_1, justify=customtkinter.LEFT, font=("Calibri", 24), text="Console")
 label_3.pack(pady=10, padx=10)
-
 switch_2 = customtkinter.CTkSwitch(master=frame_1, text="Display Errors")
 switch_2.pack(pady=10, padx=10)
-
 switch_4 = customtkinter.CTkSwitch(master=frame_1, text="Display IPCs")
 switch_4.pack(pady=10, padx=10)
-
 switch_5 = customtkinter.CTkSwitch(master=frame_1, text="QUICKLoad")
 switch_5.pack(pady=10, padx=10)
-
 label_5 = customtkinter.CTkLabel(master=frame_1, justify=customtkinter.LEFT, font=("Calibri", 24), text="Start Params")
 label_5.pack(pady=10, padx=10)
-
 text_1 = customtkinter.CTkTextbox(master=frame_1, width=200, height=70)
 text_1.pack(pady=10, padx=10)
 text_1.insert("0.0", "start:none:any\nserver:start.load")
-
 checkbox_1 = customtkinter.CTkCheckBox(master=frame_1, text='SDL')
 checkbox_1.pack(pady=10, padx=10)
-
 button_1 = customtkinter.CTkButton(master=frame_1, text="START", command=start_serv)
 button_1.pack(pady=10, padx=10)
 
@@ -274,7 +259,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
         fprint_s('HDR', response, response)
 
         self.send_header("Content-type", "text/html")
-        cookie = http.cookies.SimpleCookie()
+        cookie = cookies.SimpleCookie()
         cookie['ID'] = str(
             random.choice(chc) +
             random.choice(chc) +
@@ -482,7 +467,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
 
         self.send_response(200, "OK")
         self.send_header("Content-type", "text/html")
-        cookie = http.cookies.SimpleCookie()
+        cookie = cookies.SimpleCookie()
         cookie['ID'] = str(
             random.choice(chc) +
             random.choice(chc) +
@@ -832,7 +817,7 @@ if __name__ == "__main__":
 unused_b: str = ("\n"
                  "        self.send_response(200, \"OK\")\n"
                  "        self.send_header(\"Content-type\", \"text/html\")\n"
-                 "        cookie = http.cookies.SimpleCookie()\n"
+                 "        cookie = cookies.SimpleCookie()\n"
                  "        cookie['ID'] = str(\n"
                  "            random.choice(chc) + \n"
                  "            random.choice(chc) + \n"

@@ -165,7 +165,7 @@ cython_debug/
 
 # other files
 
-/server/iplog.txt
-/server/privacy_policy.html
+server/iplog.txt
+server/privacy_policy.html
 iplog.txt
-/pages/
+pages/

@@ -614,13 +614,13 @@ class LoopbackServer(BaseHTTPRequestHandler):
         switch = "SW1"
         self.wfile.write(bytes(
             f"| Server {server} uptime: {to_ti}s ({math.floor((to_ti / 3600) / 24) % 365}D {math.floor(to_ti / 3600) % 24}H {math.floor(to_ti / 60) % 60}M {to_ti % 60}S)| Switch {switch} uptime {to_ti + 1}s ({math.floor(((to_ti + 1) / 3600) / 24) % 365}D {math.floor((to_ti + 1) / 3600) % 24}H {math.floor((to_ti + 1) / 60) % 60}M {(to_ti + 1) % 60}S)|\n"
-            f"|Data Sent: {round((dsent / 1024)/1024, 2)}MB  Data Recv: {round((recvd / 1024)/1024, 2)}MB  Data Total: {round((total / 1024)/1024, 2)}MB|"
+            f"|Data Sent: {round((dsent / 1024) / 1024, 2)}MB  Data Recv: {round((recvd / 1024) / 1024, 2)}MB  Data Total: {round((total / 1024) / 1024, 2)}MB|"
             f"\n|CPU Freq: {cpu_freq().current} - CPU Count: {cpu_count(logical=True)} - Swap: {swap_memory().total} - Disk Usage: {disk_usage('C:/Network').used} - VRAM: {virtual_memory().total}|",
             "utf-8"))
 
         fprint(
             f"| Server {server} uptime: {to_ti}s ({math.floor((to_ti / 3600) / 24) % 365}D {math.floor(to_ti / 3600) % 24}H {math.floor(to_ti / 60) % 60}M {to_ti % 60}S)| Switch {switch} uptime {to_ti + 1}s ({math.floor(((to_ti + 1) / 3600) / 24) % 365}D {math.floor((to_ti + 1) / 3600) % 24}H {math.floor((to_ti + 1) / 60) % 60}M {(to_ti + 1) % 60}S)|\n"
-            f"\t|Data Sent: {round((dsent / 1024)/1024, 2)}KB  Data Recv: {round((recvd / 1024)/1024, 2)}KB  Data Total: {round((total / 1024)/1024, 2)}KB|"
+            f"\t|Data Sent: {round((dsent / 1024) / 1024, 2)}KB  Data Recv: {round((recvd / 1024) / 1024, 2)}KB  Data Total: {round((total / 1024) / 1024, 2)}KB|"
             f"\n\t|CPU Freq: {cpu_freq().current} - CPU Count: {cpu_count(logical=True)} - Swap: {swap_memory().total} - Disk Usage: {disk_usage('C:/Network').used} - VRAM: {virtual_memory().total}|",
             "STATS", Fore.GREEN)
 

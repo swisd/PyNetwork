@@ -13,7 +13,33 @@ from loopback_ssi import DataManagement
 from progressbar_ import bar
 from printmods import Fore, fprint_s, fprint, Back
 from tqdm import tqdm
-import psutil
+from psutil import net_io_counters, \
+    net_connections, \
+    net_if_addrs, \
+    net_if_stats, \
+    cpu_percent, \
+    cpu_count, \
+    cpu_stats, \
+    cpu_freq, \
+    cpu_times, \
+    cpu_times_percent, \
+    _cpu_times_deltas, \
+    _cpu_tot_time, \
+    _cpu_busy_time, \
+    disk_io_counters, \
+    sensors_battery, \
+    swap_memory, \
+    win_service_iter, \
+    pids, \
+    win_service_get, \
+    wait_procs, \
+    disk_partitions, \
+    disk_usage, \
+    pid_exists, \
+    virtual_memory, \
+    boot_time, \
+    version_info, \
+    _last_cpu_times
 import customtkinter
 
 QUICKLOAD: bool = False
@@ -42,6 +68,7 @@ def start_serv():
     print(f"SDL: {checkbox_1.get()}")
     QUICKLOAD = switch_5.getboolean(switch_5.get())
     app.destroy()
+
 
 frame_1 = customtkinter.CTkFrame(master=app)
 frame_1.pack(pady=20, padx=60, fill="both", expand=True)
@@ -130,10 +157,11 @@ Logging: bool = True
 KEY: str = ''
 ID: str = ''
 for i in range(len(hostName)):
-    ID += str(hex(ord(hostName[i-1]))).removeprefix("0x")
+    ID += str(hex(ord(hostName[i - 1]))).removeprefix("0x")
 
 for i in range(20):
     KEY += random.choice(chc)
+
 
 class Auxillary(DataManagement):
     def send(self, data):
@@ -150,16 +178,16 @@ def timedata(func):
         :param args:
         :param kwargs:
         """
-        recv0 = psutil.net_io_counters().bytes_recv
-        sent0 = psutil.net_io_counters().bytes_sent
+        recv0 = net_io_counters().bytes_recv
+        sent0 = net_io_counters().bytes_sent
         start_time = perf_counter_ns()
 
         func(*args, **kwargs)
 
         end_time = perf_counter_ns()
         total_time = round((end_time - start_time) / 1000000, 3)
-        recv1 = psutil.net_io_counters().bytes_recv
-        sent1 = psutil.net_io_counters().bytes_sent
+        recv1 = net_io_counters().bytes_recv
+        sent1 = net_io_counters().bytes_sent
         recv = recv1 - recv0
         sent = sent1 - sent0
         total = recv + sent
@@ -167,7 +195,7 @@ def timedata(func):
         kb_recv: float = recv / 1024
         kb_sent: float = sent / 1024
         kb_total: float = total / 1024
-        fprint(f'{total_time} ms | {kb_recv:.3f}/{kb_sent:.3f}/{kb_total:.3f} KB R/S/T | {psutil.cpu_percent(total_time / 1000)} %CPU', 'INFO', Fore.GREEN)
+        fprint(f'{total_time} ms | {kb_recv:.3f}/{kb_sent:.3f}/{kb_total:.3f} KB R/S/T | {cpu_percent(total_time / 1000)} %CPU', 'INFO', Fore.GREEN)
         if total_time > 30000:
             fprint("Server timed out.", "ERROR", Fore.RED)
         print('\n')
@@ -204,15 +232,17 @@ def handle(clientIP: object, serverIP: str = '127.0.0.1', header: object = None,
 # @cache
 
 st_ti = perf_counter()
+recv = net_io_counters().bytes_recv
+sent = net_io_counters().bytes_sent
 
 
 class LoopbackServer(BaseHTTPRequestHandler):
     """Loopback Server"""
 
-    recv0 = psutil.net_io_counters().bytes_recv
-    sent0 = psutil.net_io_counters().bytes_sent
+    recv0 = net_io_counters().bytes_recv
+    sent0 = net_io_counters().bytes_sent
     start_time = perf_counter_ns()
-    global file_to_open, verifiedADDR, req_s, st_ti, serverVerifiedAddr
+    global file_to_open, verifiedADDR, req_s, st_ti, serverVerifiedAddr, recv, sent
 
     def do_GET(self):
         """GET data request"""
@@ -446,6 +476,9 @@ class LoopbackServer(BaseHTTPRequestHandler):
         req_s += 1
 
         fprint(f"POST request {self.path}", 'SERVER', Fore.CYAN)
+        self.send_response(200, "OK")
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
 
         if self.path.endswith('/dbverify' or '/server/database_verification.html'):
             ctype, pdict = cgi.parse_header(self.headers.get('Content-type'))
@@ -453,10 +486,28 @@ class LoopbackServer(BaseHTTPRequestHandler):
                 new = self.client_address[0]
                 verifiedADDR += f'{new}, '
 
-        # todo: Fix upload system so that it is usable
+        # todo: Fix upload system so that it is usable for internet/browser clients
 
         elif self.path.endswith('/upload'):
             pass
+
+        """
+        elif self.path.startswith("name="):
+            self.path.split("_")
+            name = (self.path[0].removeprefix('name=')).replace("'", "")
+            if not os.path.exists(f"C:/Network/db/public/{name}"):
+                with open(f"C:/Network/db/public/{name}", "x") as _F:
+                    data = self.path[1].removeprefix("data=")
+                    _F.write(data)
+                    _F.close()
+                    self.wfile.write(f"File {name} created in /db/public/{name}")
+            else:
+                with open(f"C:/Network/db/public/{name}", "w") as _F:
+                    data = self.path[1].removeprefix("data=")
+                    _F.write(data)
+                    _F.close()
+                    self.wfile.write(f"File {name} modified in /db/public/{name}")
+        """
 
     def do_HEAD(self):
         """HEAD data request"""
@@ -545,26 +596,38 @@ class LoopbackServer(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do__s(self):
-        global st_ti
+        global st_ti, recv, sent
         """-s data request"""
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
+
+        recv1 = net_io_counters().bytes_recv
+        sent1 = net_io_counters().bytes_sent
+        recvd = recv1 - recv
+        dsent = sent1 - sent
+        total = recvd + dsent
+
         cr_ti = perf_counter()
         to_ti = round(cr_ti - st_ti)
         server = "A1"
         switch = "SW1"
         self.wfile.write(bytes(
-            f"| Server {server} uptime: {to_ti}s ({math.floor((to_ti / 3600) / 24) % 365}D {math.floor(to_ti / 3600) % 24}H {math.floor(to_ti / 60) % 60}M {to_ti % 60}S)| Switch {switch} uptime {to_ti + 1}s ({math.floor(((to_ti + 1) / 3600) / 24) % 365}D {math.floor((to_ti + 1) / 3600) % 24}H {math.floor((to_ti + 1) / 60) % 60}M {(to_ti + 1) % 60}S)|",
+            f"| Server {server} uptime: {to_ti}s ({math.floor((to_ti / 3600) / 24) % 365}D {math.floor(to_ti / 3600) % 24}H {math.floor(to_ti / 60) % 60}M {to_ti % 60}S)| Switch {switch} uptime {to_ti + 1}s ({math.floor(((to_ti + 1) / 3600) / 24) % 365}D {math.floor((to_ti + 1) / 3600) % 24}H {math.floor((to_ti + 1) / 60) % 60}M {(to_ti + 1) % 60}S)|\n"
+            f"|Data Sent: {round((dsent / 1024)/1024, 2)}MB  Data Recv: {round((recvd / 1024)/1024, 2)}MB  Data Total: {round((total / 1024)/1024, 2)}MB|"
+            f"\n|CPU Freq: {cpu_freq().current} - CPU Count: {cpu_count(logical=True)} - Swap: {swap_memory().total} - Disk Usage: {disk_usage('C:/Network').used} - VRAM: {virtual_memory().total}|",
             "utf-8"))
 
         fprint(
-            f"| Server {server} uptime: {to_ti}s ({math.floor((to_ti / 3600) / 24) % 365}D {math.floor(to_ti / 3600) % 24}H {math.floor(to_ti / 60) % 60}M {to_ti % 60}S)| Switch {switch} uptime {to_ti + 1}s ({math.floor(((to_ti + 1) / 3600) / 24) % 365}D {math.floor((to_ti + 1) / 3600) % 24}H {math.floor((to_ti + 1) / 60) % 60}M {(to_ti + 1) % 60}S)|",
+            f"| Server {server} uptime: {to_ti}s ({math.floor((to_ti / 3600) / 24) % 365}D {math.floor(to_ti / 3600) % 24}H {math.floor(to_ti / 60) % 60}M {to_ti % 60}S)| Switch {switch} uptime {to_ti + 1}s ({math.floor(((to_ti + 1) / 3600) / 24) % 365}D {math.floor((to_ti + 1) / 3600) % 24}H {math.floor((to_ti + 1) / 60) % 60}M {(to_ti + 1) % 60}S)|\n"
+            f"\t|Data Sent: {round((dsent / 1024)/1024, 2)}KB  Data Recv: {round((recvd / 1024)/1024, 2)}KB  Data Total: {round((total / 1024)/1024, 2)}KB|"
+            f"\n\t|CPU Freq: {cpu_freq().current} - CPU Count: {cpu_count(logical=True)} - Swap: {swap_memory().total} - Disk Usage: {disk_usage('C:/Network').used} - VRAM: {virtual_memory().total}|",
             "STATS", Fore.GREEN)
 
         fprint('-s request', 'SERVER', Fore.CYAN)
 
     def do__d(self):
+
         """-d data request"""
         self.send_response(200)
         self.send_header("Content-type", "text/html")
@@ -573,7 +636,8 @@ class LoopbackServer(BaseHTTPRequestHandler):
         fprint('-d request', 'SERVER', Fore.CYAN)
 
         if self.path.startswith('allocate=point'):
-            self.wfile.write(bytes(f"Allocated point [{(((self.path.split('.'))[1]).split(':'))[0]}] to Type [{(((self.path.split('.'))[1]).split(':'))[1]}]", "utf-8"))
+            self.wfile.write(
+                bytes(f"Allocated point [{(((self.path.split('.'))[1]).split(':'))[0]}] to Type [{(((self.path.split('.'))[1]).split(':'))[1]}]", "utf-8"))
 
     def do__v(self):
         """-v data request"""
@@ -637,7 +701,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
 
     def do__rst(self):
         for i in range(len(seperateIntefaceIP)):
-            if str(seperateIntefaceIP[i-1]).lower() == 'admin':
+            if str(seperateIntefaceIP[i - 1]).lower() == 'admin':
                 os.execv(sys.executable, ['python'] + sys.argv)
                 fprint("Restarting Server", "SERVER", Fore.RED)
                 break
@@ -714,10 +778,47 @@ class LoopbackServer(BaseHTTPRequestHandler):
         self.send_header("Content-type", "text/html")
         self.end_headers()
 
+    def do_UPLOAD(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+        self.path = self.path.split("%%$")
+        name = (self.path[0].removeprefix("name="))
+        if not os.path.exists(f"C:/Network/db/public/{name}"):
+            if not os.path.exists(f'C:/Network/db/public/{name.removesuffix((name.split("/"))[(len(name.split("/"))) - 1])}'):
+                os.makedirs(f'C:/Network/db/public/{name.removesuffix((name.split("/"))[(len(name.split("/"))) - 1])}')
+
+            with open(f"C:/Network/db/public/{name}", "x") as _F:
+                data = ''
+                for char in self.path[1].removeprefix("data="):
+                    if char == "&":
+                        char = " "
+                    elif char == "$":
+                        char = "\n"
+                    data += char
+
+                _F.write(data)
+                _F.close()
+                self.wfile.write(bytes(f"File {name} created in /db/public/{name}", "utf-8"))
+        else:
+            with open(f"C:/Network/db/public/{name}", "w") as _F:
+                data = ''
+
+                for char in self.path[1].removeprefix("data="):
+                    if char == "&":
+                        char = " "
+                    elif char == "$":
+                        char = "\n"
+                    data += char
+
+                _F.write(data)
+                _F.close()
+                self.wfile.write(bytes(f"File {name} modified in /db/public/{name}", "utf-8"))
+
     end_time = perf_counter_ns()
     total_time = round((end_time - start_time) / 1000000, 3)
-    recv1 = psutil.net_io_counters().bytes_recv
-    sent1 = psutil.net_io_counters().bytes_sent
+    recv1 = net_io_counters().bytes_recv
+    sent1 = net_io_counters().bytes_sent
     recv = recv1 - recv0
     sent = sent1 - sent0
     total = recv + sent
@@ -725,7 +826,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
     kb_recv: float = recv / 1024
     kb_sent: float = sent / 1024
     kb_total: float = total / 1024
-    fprint(f'{total_time} ms | {kb_recv:.3f}/{kb_sent:.3f}/{kb_total:.3f} KB R/S/T | {psutil.cpu_percent(total_time / 1000)} %CPU', 'INFO', Fore.GREEN)
+    fprint(f'{total_time} ms | {kb_recv:.3f}/{kb_sent:.3f}/{kb_total:.3f} KB R/S/T | {cpu_percent(total_time / 1000)} %CPU', 'INFO', Fore.GREEN)
     if total_time > 30000:
         fprint("Server timed out.", "ERROR", Fore.RED)
     print('\n')
@@ -755,7 +856,8 @@ if __name__ == "__main__":
         bar(i + 1, l, prefix='Loading:           ', suffix='Complete', length=25, data=True)
 
     IH: int = 0
-    stats = ["CPU_Any_Cores/2/0.hdwr", "CPU_Any_Cores/2/1.hdwr", "NVMe0.hdwr            ", "RAM0.hdwr           ", "CS0.hdwr            ", "Done                "]
+    stats = ["CPU_Any_Cores/2/0.hdwr", "CPU_Any_Cores/2/1.hdwr", "NVMe0.hdwr            ", "RAM0.hdwr           ", "CS0.hdwr            ",
+             "Done                "]
     statsI3 = ["i3_7350K/C0.hdwr", "i3_7350K/C1.hdwr", "NVMe0.hdwr        ", "RAM0.hdwr        ", "CS0.hdwr        ", "Done            "]
 
     bar(0, l, prefix='Hardware Processes:', suffix=stats[0], length=25)
@@ -787,7 +889,7 @@ if __name__ == "__main__":
            f"IP Addr.: {ip_addr}\n"
            f"Port: {serverPort}\n"
            f"ID: {ID}\n"
-           f"KEY: {'*'*(len(KEY)-5) + KEY[(len(KEY)-4):]}\n"
+           f"KEY: {'*' * (len(KEY) - 5) + KEY[(len(KEY) - 4):]}\n"
            f"Clients: {clients}\n"
            f"CLI_REQs: {CLI_REQs}\n"
            f"R_LIMIT: {R_LIMIT}\n"

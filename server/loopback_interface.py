@@ -19,6 +19,7 @@ print(data_received)
 while 1:
     oneOP = False
     download = False
+    upload = False
     cmd = input(f'\n{Fore.YELLOW}cmd> {Fore.WHITE}')
 
     cmd = cmd.split()
@@ -33,6 +34,22 @@ while 1:
         download = True
         cmd[0] = 'GET'
 
+    elif cmd[0] == '--u':
+        upload = True
+        cmd[0] = 'UPLOAD'
+
+    if upload:
+        data = ''
+        for char in open(cmd[1], "r").read():
+            if char == " ":
+                char = "&"
+            elif char == "\n":
+                char = "$"
+            data += char
+        name = "/" + id_name + "/" + (cmd[1].split('/'))[((len(cmd[1].split('/'))) - 1)]
+
+        cmd[1] = f"name={name}%%$data={data}"
+
     if cmd[0].startswith('-'):
         cmd[0] = cmd[0].replace('-', '_')
 
@@ -40,6 +57,7 @@ while 1:
         conn.request(cmd[0], cmd[1])
     except:
         conn.request(cmd[0], "/")
+
 
     fprint("Request sent.\n", "INFO", Fore.GREEN)
 

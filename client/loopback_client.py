@@ -34,6 +34,7 @@ rsp = conn.getresponse()
 
 while 1:
     download = False
+    upload = False
     cmd = input('input command (ex. GET index.html): ')
     cmd = cmd.split()
 
@@ -43,6 +44,14 @@ while 1:
     if cmd[0] == '--d':
         download = True
         cmd[0] = 'GET'
+
+    elif cmd[0] == '--u':
+        upload = True
+        cmd[0] = 'UPLOAD'
+
+    if upload:
+        cmd[1] == f"name='{(cmd[1].split('/'))[((len(cmd[1].split('/')))-2):]}'_data={(open(cmd[1], 'r')).read()}"
+
 
     # request command to server
     conn.request(cmd[0], cmd[1])

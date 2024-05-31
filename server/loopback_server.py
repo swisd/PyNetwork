@@ -7,8 +7,10 @@ import random
 import math
 import os
 import sys
+
 # 'cgi' is deprecated and slated for removal in python 3.13
 #import cgi
+
 from loopback_ssi import DataManagement
 from progressbar_ import bar
 from printmods import Fore, fprint_s, fprint, Back

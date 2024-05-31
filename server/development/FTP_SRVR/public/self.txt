@@ -1,2 +1,0 @@
-FTP server test file
-## DO NOT DELETE ##

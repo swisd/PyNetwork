@@ -8,7 +8,7 @@ import math
 import os
 import sys
 # 'cgi' is deprecated and slated for removal in python 3.13
-import cgi
+#import cgi
 from loopback_ssi import DataManagement
 from progressbar_ import bar
 from printmods import Fore, fprint_s, fprint, Back
@@ -153,6 +153,7 @@ MOD_KEYWORDS: list = [
 ]
 KEYWORDS: list = []
 Logging: bool = True
+swips: list = [[]]
 
 KEY: str = ''
 ID: str = ''
@@ -231,9 +232,23 @@ def handle(clientIP: object, serverIP: str = '127.0.0.1', header: object = None,
 # Server
 # @cache
 
+def switch(mode: str = "w", frm: str = None, to: str = None):
+    if not to == "None":
+        if mode == "w":
+            swips.append([frm, to])
+        elif mode == "af":
+            for i in range(len(swips)):
+                if swips[i][0] == frm:
+                    return swips[i][1]
+        elif mode == "at":
+            for i in range(len(swips)):
+                if swips[i][1] == to:
+                    return swips[i][0]
+
 st_ti = perf_counter()
 recv = net_io_counters().bytes_recv
 sent = net_io_counters().bytes_sent
+disk = disk_io_counters().write_bytes + disk_io_counters().read_bytes
 
 
 class LoopbackServer(BaseHTTPRequestHandler):
@@ -481,7 +496,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
         self.end_headers()
 
         if self.path.endswith('/dbverify' or '/server/database_verification.html'):
-            ctype, pdict = cgi.parse_header(self.headers.get('Content-type'))
+            ctype = self.headers.get('Content-type')
             if ctype == 'multipart/form-data':
                 new = self.client_address[0]
                 verifiedADDR += f'{new}, '
@@ -596,7 +611,7 @@ class LoopbackServer(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do__s(self):
-        global st_ti, recv, sent
+        global st_ti, recv, sent, disk
         """-s data request"""
         self.send_response(200)
         self.send_header("Content-type", "text/html")
@@ -607,6 +622,8 @@ class LoopbackServer(BaseHTTPRequestHandler):
         recvd = recv1 - recv
         dsent = sent1 - sent
         total = recvd + dsent
+        st_dsk = disk_io_counters().write_bytes + disk_io_counters().read_bytes
+        cdisk =st_dsk - disk
 
         cr_ti = perf_counter()
         to_ti = round(cr_ti - st_ti)
@@ -615,13 +632,15 @@ class LoopbackServer(BaseHTTPRequestHandler):
         self.wfile.write(bytes(
             f"| Server {server} uptime: {to_ti}s ({math.floor((to_ti / 3600) / 24) % 365}D {math.floor(to_ti / 3600) % 24}H {math.floor(to_ti / 60) % 60}M {to_ti % 60}S)| Switch {switch} uptime {to_ti + 1}s ({math.floor(((to_ti + 1) / 3600) / 24) % 365}D {math.floor((to_ti + 1) / 3600) % 24}H {math.floor((to_ti + 1) / 60) % 60}M {(to_ti + 1) % 60}S)|\n"
             f"|Data Sent: {round((dsent / 1024) / 1024, 2)}MB  Data Recv: {round((recvd / 1024) / 1024, 2)}MB  Data Total: {round((total / 1024) / 1024, 2)}MB|"
-            f"\n|CPU Freq: {cpu_freq().current} - CPU Count: {cpu_count(logical=True)} - Swap: {swap_memory().total} - Disk Usage: {disk_usage('C:/Network').used} - VRAM: {virtual_memory().total}|",
+            f"\n|CPU Freq: {cpu_freq().current} - CPU Count: {cpu_count(logical=True)} - Swap: {swap_memory().total} - Disk Usage: {disk_usage('C:/Network').used} - VRAM: {virtual_memory().total}|"
+            f"\n| Disk I/O: {round((st_dsk/1024)/1024)}MB|",
             "utf-8"))
 
         fprint(
             f"| Server {server} uptime: {to_ti}s ({math.floor((to_ti / 3600) / 24) % 365}D {math.floor(to_ti / 3600) % 24}H {math.floor(to_ti / 60) % 60}M {to_ti % 60}S)| Switch {switch} uptime {to_ti + 1}s ({math.floor(((to_ti + 1) / 3600) / 24) % 365}D {math.floor((to_ti + 1) / 3600) % 24}H {math.floor((to_ti + 1) / 60) % 60}M {(to_ti + 1) % 60}S)|\n"
             f"\t|Data Sent: {round((dsent / 1024) / 1024, 2)}KB  Data Recv: {round((recvd / 1024) / 1024, 2)}KB  Data Total: {round((total / 1024) / 1024, 2)}KB|"
-            f"\n\t|CPU Freq: {cpu_freq().current} - CPU Count: {cpu_count(logical=True)} - Swap: {swap_memory().total} - Disk Usage: {disk_usage('C:/Network').used} - VRAM: {virtual_memory().total}|",
+            f"\n\t|CPU Freq: {cpu_freq().current} - CPU Count: {cpu_count(logical=True)} - Swap: {swap_memory().total} - Disk Usage: {disk_usage('C:/Network').used} - VRAM: {virtual_memory().total}|"
+            f"\n\t| Disk I/O: {round((st_dsk/1024)/1024)}MB|",
             "STATS", Fore.GREEN)
 
         fprint('-s request', 'SERVER', Fore.CYAN)
@@ -814,6 +833,19 @@ class LoopbackServer(BaseHTTPRequestHandler):
                 _F.write(data)
                 _F.close()
                 self.wfile.write(bytes(f"File {name} modified in /db/public/{name}", "utf-8"))
+
+    def do_SWITCH(self):
+        if self.path.startswith("af") or self.path.startswith("at"):
+            self.path = self.path.split(":")
+            switch(mode=self.path[0], frm=self.path[1], to=self.path[1])
+        elif self.path.startswith("w"):
+            self.path = self.path.split(":")
+            self.pathR = self.path[1].split("t")
+            switch(mode="w", frm=self.pathR[0], to=self.pathR[1])
+
+
+
+
 
     end_time = perf_counter_ns()
     total_time = round((end_time - start_time) / 1000000, 3)
